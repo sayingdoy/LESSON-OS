@@ -1,0 +1,26 @@
+# ── 派生 / 缓存：不纳入版本控制 ──────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Windows / 编辑器噪声
+Thumbs.db
+desktop.ini
+*~
+*.tmp
+*.bak
+
+# ── git 自身 ─────────────────────────────────────────────────
+# ⚠️ 关键：本目录若被坚果云 / Obsidian 同步，.git/ 必须排除，
+#    否则同步盘会搬运 git 内部对象，导致 submodule 的 .git 文件被污染。
+.git/
+.gitmodules.bak
+
+# ── 明确追踪（核心资产）──────────────────────────────────────
+# learn_engine/**            零外部依赖内核（唯一真源）
+# PLAYBOOK.md / AGENTS.md    SSOT 手册 + 执行宪法
+# ADR/**                     架构决策记录
+# MVP-Backlog.md             垂直切片工单
+# Project Audit/**           审计归档
+# .workbuddy/memory/**       工作记忆（append-only）
