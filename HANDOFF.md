@@ -74,7 +74,8 @@
 
 ## 四、关键约束（不要违反）
 
-- **判分纯代码、模型不参与**（bb-prep AGENTS.md 铁律 6；vocab-app 同构）。
+- **判分纯代码、模型不参与**（真源：bb-prep `docs/契约/引擎与数据.md`「判分铁律」；
+  bb-prep `AGENTS.md` §4.3 是讲解铁律、编号不同，勿混引；vocab-app 同构）。
 - **数字必须实测**，不许凭印象写进文档。
 - **改动前先读受影响模块的调用者**（Karpathy R8）。
 - **不要大爆炸重构**：内核抽离须原地 import、行为不变。
@@ -86,8 +87,8 @@
 
 - **`audit-os`** —— 任何内核方案/架构评审都走此工作流（方案_tbd → 审计_tbA → 终版_OK → 归档）。
 - **`handoff`** —— 本轮结束再交接时用（本文件即范例）。
-- **bb-prep 上下文**：读取 `D:\SixSigmaBlackBelt\AGENTS.md` 与 `.workbuddy/memory/MEMORY.md`
-  （铁律索引）再动 `src/`。
+- **bb-prep 上下文**：读取 `D:\SixSigmaBlackBelt\AGENTS.md` + `docs\契约\`（判分/提取/一致性
+  等约束全文，`AGENTS.md:45-46` 指向此目录）+ `.workbuddy/memory/MEMORY.md` 再动 `src/`。
 - **vocab-app 上下文**：读取 `D:\Projects\vocab-app\AGENTS.md` / `CONTEXT.md` 再动其 `src/`。
 
 ---

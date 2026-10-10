@@ -14,15 +14,28 @@ from typing import Optional
 DEFAULT_LADDER = [1, 2, 4, 7, 14, 28, 45]
 MASTER_STAGE = len(DEFAULT_LADDER) - 1
 
-# 状态集合（与 bb-prep / vocab-app 同源）
+# 状态集合（与 bb-prep / vocab-app 同源）。
+# ⚠️ 只含**能进状态机的态** —— next_schedule 的合法输出/输入域。
+# 不含 "new"：那是「尚未建卡」的**哨兵**，不是 SRS 状态（见 POOL_NEW）。
 STATES = ("learning", "review", "mastered", "lapsed")
+
+# pool 分流哨兵（**不是** SRS 状态，不入 STATES）。
+#
+# 为什么单列：两个真源都是 `fm.setdefault("state", "new")` —— "new" 是
+# 未建卡的**默认值**，卡片一旦进入调度就再也不会是 "new"。
+# 但出卷要按它分池（`state == new` → 新题池；否则 → 到期复习池），
+# 所以 picker 需要一个**具名常量**而非硬编码字面量（单一真源）。
+#
+# ⚠️ 不得把 "new" 塞进 STATES：那会让 next_schedule 的合法输入域模糊
+# （传 state="new" 进状态机会得到无意义结果）。
+POOL_NEW = "new"
 
 
 @dataclass
 class Item:
     id: str
     stage: int = 0
-    state: str = "learning"          # learning | review | mastered | lapsed
+    state: str = POOL_NEW          # POOL_NEW(未建卡) | learning | review | mastered | lapsed
     due: Optional[dt.date] = None
     domain: str = "?"
     reviews: int = 0
@@ -42,7 +55,7 @@ class Item:
         return cls(
             id=str(fm.get("id") or ""),
             stage=int(fm.get("stage") or 0),
-            state=str(fm.get("state") or "learning"),
+            state=str(fm.get("state") or POOL_NEW),
             due=due,
             domain=str(fm.get("domain") or "?"),
             reviews=int(fm.get("reviews") or 0),

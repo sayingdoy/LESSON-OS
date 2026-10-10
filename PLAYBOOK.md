@@ -76,13 +76,20 @@ version: 0.1.0
 |---|---|---|---|
 | `id` | str | ✅ | 全局唯一，按来源身份发（如 `bb-00NN` / `Word` / `ex-001`），**绝不按位置** |
 | `type` | str | ✅ | 条目类型（`question` / `word` / `mistake`） |
-| `state` | enum | ✅ | `new` / `learning` / `review` / `lapsed` / `mastered` |
+| `state` | enum | ✅ | `new` / `learning` / `review` / `lapsed` / `mastered`（见下方注） |
 | `stage` | int | ✅ | 间隔阶梯阶数（0–`MASTER_STAGE`） |
 | `due` | date | ✅ | 下次到期日（ISO） |
 | `correct` / `wrong` / `reviews` | int | ✅ | 累计统计 |
 | `difficulty` | float | ⚠️ | 难度（LADDER 下可省略；FSRS 后端启用时由 S/D 派生） |
 | `domain` / `tags` | list | ⚠️ | 领域/标签（bb-prep 九域、vocab-app 账户、Kongzi 科目） |
 | `note` | str | — | Obsidian 双链，指向原子笔记（如 `[[VI.B.9-均值方差和比率检验]]`） |
+
+> **注（`state` 的两类取值，2026-10-11 裁决 B4）**：
+> - **`new` = pool 分流哨兵**，表示「尚未建卡」——两真源均为 `setdefault("state","new")`，
+>   卡片一旦进入调度就再也不会是 `new`。**它不是 SRS 状态。**
+> - **`learning` / `review` / `mastered` / `lapsed` = 状态机合法态**（= 内核 `model.STATES`）。
+> - 内核以 `model.POOL_NEW` 常量表达哨兵（不硬编码字面量）。
+>   **不得把 `new` 并入 `STATES`** —— 会让 `next_schedule` 的合法输入域模糊。
 | `history` | list | — | 回顾日志（FSRS 调参用，可选） |
 | `S` / `D` | float | — | **引擎保留字段**：FSRS 后端启用时填充（稳定性 / 难度），LADDER 下留空 |
 
@@ -128,7 +135,20 @@ load_key(note) / load_judged(note) / save_judged(note, nos)
 
 ---
 
-## 6. ADR 模板（单文件 `adr.md` 集中管理）
+## 6. ADR 约定（`ADR/` 目录，一决策一文件）
+
+**载体**：`ADR/` 目录下独立文件，命名 `ADR-NNNN-<短标题>.md`（如
+`ADR-0002-golden-set验收法.md`）。**不使用单文件集中管理**（早期 §6 曾写「单文件
+`adr.md`」，与仓库实际不符，2026-10-11 纠正）。
+
+**模板**：唯一模板是 `ADR/ADR-template.md`（**禁止在别处内联副本** —— 防双 SSOT）。
+
+**硬约束**：
+- 正文引用的 ADR 编号**必须有实体文件**；无实体的编号不得引用（曾出现 0006/0008 被引用
+  但无文件的情况，2026-10-11 已补）。
+- 一决策一文件，不合并；废弃不删档，改「状态：废弃」并写明被谁取代。
+
+**条目格式**（见 `ADR-template.md`）：
 
 ```
 ## ADR-NNNN <标题>

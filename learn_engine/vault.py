@@ -35,7 +35,8 @@ def write_front(path, updates: dict) -> None:
 
     ⚠️ P1 占位：bb-prep/vocab-app 已有等价实现，合并进内核时须：
       - 按表头名定位字段（列数会演进，禁止写死下标）；
-      - 保留显式 LF 行尾（bb-prep 铁律 21）；
+      - 保留显式 LF 行尾（真源：bb-prep `docs/契约/引擎与数据.md`「行尾 LF」条；
+        另见 `.gitattributes`）；
       - 不触碰正文、不污染题干/选项/解析。
     未注入具体 writer 前抛 NotImplemented，保持内核零依赖。
     """

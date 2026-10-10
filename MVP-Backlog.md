@@ -11,6 +11,7 @@
 | 阶段 | 状态 |
 |---|---|
 | P0 手册 + SSOT schema + 路线图 + 骨架 | ✅ 完成 |
+| **R1 契约修正（裁决 B1–B5 / A3余 / C1余）** | ✅ **完成 2026-10-11**（内核 → `0.2.0`） |
 | **P1 抽代码（本 backlog）** | ⬜ 待启动 |
 | P2 接入 + 技能库 | ⬜ 待启动 |
 | FSRS 后端 | ⬜ P2 候选 |
@@ -18,8 +19,15 @@
 **技术债清单**（P1 要还的）：
 - `vault.write_front` → `NotImplementedError`
 - `grader.Grader.judge` → 基类占位，bb-prep adapter 缺失
-- `picker.Picker.pick` → 基类占位
-- 无 `tests/` 目录（golden-set 未建立）
+- `picker.WeightedPicker.pick` → **有新债**：真源的「新题贪心 + 温和上限
+  `cap=⌈w/tot·n⌉+1`」未移入（B2 已知差距，必须 A 片补齐）
+- `picker` / `scheduler` / `vault` 内部**四份同源日期解析**（B6，P1 收敛到一处）
+- ✅ **已清**：`tests/` + golden-set 已建（2026-10-11）
+
+> **R1 契约修正已完成**（2026-10-11，内核 `0.1.0 → 0.2.0`）：
+> B1 `judge` → `str`；B2 `pick` 显式注入（去重/权重不再空转）；B3 ADR-0002 固定 `rng`
+> （`FIXED_SEED=20261010`）；B4 `POOL_NEW` 常量；B5 引用改真源。
+> 详见 `audit_log.md` 决策链。
 
 ---
 
@@ -30,12 +38,14 @@
 
 | # | 工单 | 验收 |
 |---|---|---|
-| A1 | 建 `learn_engine/tests/` + golden-set 骨架 | 固定 items + 固定 `today`，能跑出稳定输出 |
+| A1 | 建 `learn_engine/tests/` + golden-set 骨架 | ✅ **完成 2026-10-11**（13 项断言全过，基线存 `golden_v0.2.0.json`） |
 | A2 | 实装 `vault.write_front`（只改已存在的 frontmatter 键，正文一字不动） | 单测：改前 / 改后逐字节比对，**正文零变化** |
 | A3 | bb-prep `src/bbcore.py` 排期逻辑改为 `import learn_engine` | 改前 / 改后出卷**逐字节相同** |
+| A4 | **补 `picker` 的新题贪心 + 温和上限**（B2 遗留） | 与 bb-prep `pick_items` 在同一 seed 下输出一致 |
 
 **预登记（写死在前面，不许事后改）**：
 > **P1-A 通过判据**：A2 单测全过 + A3 的 bb-prep 出卷输出与改前**逐字节一致**。
+> **验收第 0 步**：`rng = random.Random(20261010)` 必须固定（ADR-0002）。
 > **失败条款**：任一不过 ⇒ **不进入 P1-B**，先查差异来源。
 > **LADDER 处理**：`bbcore.py:28` 的 `[1,2,4,7,14,28,45]` 与 `review.py:25` 的
 > `[1,2,4,7,15,30,60,120]` **不同** → LADDER 作**注入参数**，内核只提供默认值（ADR-0001）。

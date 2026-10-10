@@ -56,6 +56,13 @@ R1 的 1 处 🟡 待修项（LADDER 非逐字节相同）**已于本轮闭环**
 | 2026-10-10 | golden-set 逐字节比对为验收法（ADR-0002） | JEV §8 预登记纪律迁移，可机械化判据 |
 | 2026-10-10 | 归因闸门 JEV `noul` 暂不启用（ADR-0004） | 阈值未测 + 样本不足（n<16） |
 | 2026-10-10 | 标准库三门槛 + 双轨注册（PLAYBOOK §11） | 防双 SSOT + 信噪比过滤 |
+| 2026-10-11 | **B1 `judge` 返回类型 = `str`**（`"correct"`/`"wrong"`） | 双源 100% 一致（`bbcore.py:401`/`review.py:137`），内核 bool 是孤例；`settle.py:154` 证明字符串是有意设计 |
+| 2026-10-11 | **B2 `pick` 改显式注入**（`recent`/`history_counts`/`domain_weights`/`is_exam`） | 消除 `getattr` 与恒空 `{}` 的"假能力"；去重/权重曾空转 |
+| 2026-10-11 | **B3 验收第 0 步 = 固定 `rng`**（`FIXED_SEED=20261010`） | 不固定则逐字节比对不成立；bb-prep 早有 `--seed` 钩子 |
+| 2026-10-11 | **B4 `new` 是 pool 哨兵，不入 `STATES`**；新增 `POOL_NEW` 常量 | `new` 是 `setdefault` 默认值，非 SRS 状态；入 STATES 会模糊状态机输入域 |
+| 2026-10-11 | **B5 内核引用改真源**（`docs/契约/引擎与数据.md`） | "铁律 21" 全库零命中；按错误编号核对会得相反结论 |
+| 2026-10-11 | **C1余 补 `ADR-0006`/`0008` 实体** | 引用密度高，留档比外链稳 |
+| 2026-10-11 | **A3余 PLAYBOOK §6 改 `ADR/` 目录约定** | 原"单文件 `adr.md`"与仓库实际冲突（R7） |
 
 ---
 
@@ -106,3 +113,39 @@ R1 的 1 处 🟡 待修项（LADDER 非逐字节相同）**已于本轮闭环**
 | B5 | 内核引用是否改用真源位置（`docs/契约/引擎与数据.md`） | 证据链正确性 |
 | C1 余 | `ADR-0006`/`0008` 补实体文件或改引用 | 决策链可解析率 |
 | A3 余 | PLAYBOOK §6「单文件 `adr.md`」改为 `ADR/` 目录约定 | R7 模式冲突消解 |
+
+---
+
+## 2026-10-11 · R1 待裁决项全部裁决并落地（内核 → `0.2.0`）
+
+- **裁决方**：Jason（Owner），指示「七项裁决，开始」
+- **执行方**：agent（workbuddy）
+- **建议依据**：`v0.1.0_工作路径图与计划_R1_待裁决项_建议_tbd_LessonOS.md`（Planner 实测）
+  + `..._审计_tbA_Hermes.md`（Auditor 复核，6/7 成立）
+- **Verdict**：✅ **全部 7 项已落地并验收**
+
+### 落地清单
+
+| # | 裁决结果 | 落地动作 | 验收 |
+|:---:|---|---|:---:|
+| B1 | 取 `str` | `grader.py` 基类 + `ExactMatchGrader` 返回 `"correct"`/`"wrong"` | ✅ 单测 |
+| B2 | 显式注入 | `picker.py` 重写：消除 `getattr`/恒空 `{}`；签名含 `recent`/`history_counts`/`domain_weights`/`is_exam` | ✅ 权重/去重生效可测 |
+| B3 | 补固定 rng | `ADR-0002` 加「验收第 0 步」+ `FIXED_SEED=20261010` | ✅ 写死 |
+| B4 | 不入 `STATES` | `model.py` 加 `POOL_NEW`；`Item.state` 默认改 `POOL_NEW`（对齐双源 `setdefault`） | ✅ 单测 |
+| B5 | 改真源 | 4 处（`grader.py`/`vault.py`/`HANDOFF.md`×2） | ✅ 全库零残留 |
+| C1余 | 补实体 | 新增 `ADR-0006-密钥与判分隔离.md`、`ADR-0008-判分账本幂等.md` | ✅ 编号全可解析 |
+| A3余 | 改目录约定 | `PLAYBOOK.md` §6 重写；删内联模板 | ✅ |
+
+### 附带产出（B8 版本锚点 + P1-A1 工单）
+
+- `learn_engine/tests/` + `golden_set.py`（**13 项断言全过**）：
+  固定 `seed=20261010` / `today=2026-10-11`；断言含去重生效、权重生效、`judge` 返 str、
+  `POOL_NEW∉STATES`、LADDER 注入、状态机边界。
+- golden 基线存 `learn_engine/tests/golden_v0.2.0.json`。
+- **版本 bump `0.1.0 → 0.2.0`**（新增导出符号 `POOL_NEW`/`STATES` = MINOR，对应 B8）。
+- `MVP-Backlog` 更新：R1 修正标记完成；新增 **P1-A4**（补 picker 贪心+上限，B2 遗留）。
+
+### 待办（进入 P1-A 前）
+
+- P1-A4 是**新增必要条件**：内核 picker 与 bb-prep `pick_items` 输出要在同 seed 下一致，
+  否则 A3 的「逐字节相同」判据必失败（真源的贪心+上限尚未移入）。
