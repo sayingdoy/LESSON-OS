@@ -116,10 +116,14 @@ LESSON-OS/
 │   ├── vault.py              ← frontmatter 读写（stdlib regex）
 │   ├── grader.py             ← 判定策略接口 + ExactMatchGrader(vocab 风格)
 │   └── picker.py             ← 出卷策略接口 + WeightedPicker(bb 风格)
-├── ADR/
-│   └── ADR-template.md       ← 架构决策记录模板
-└── Project Audit/            ← audit-os 审计（工作路径图 + 下一个计划）
-    ├── audit_log.md
-    ├── v0.1.0_工作路径图与计划_R1_方案_tbd_LessonOS.md
-    └── v0.1.0_工作路径图与计划_R1_审计_tbA_LessonOS.md
+├── ADR/                      ← 架构决策记录（一决策一文件）
+│   ├── ADR-template.md       ← 模板
+│   ├── ADR-0001-LADDER作注入参数.md
+│   ├── ADR-0002-golden-set验收法.md
+│   ├── ADR-0003-版本闸门载体git-submodule.md
+│   └── ADR-0004-归因闸门JEV候选.md
+├── scripts/                  ← sync_all.sh（四仓库同步推 ecs 私有远端）
+└── Project Audit/            ← audit-os 审计
+    ├── audit_log.md          ← 审计日志（决策链）
+    └── Archive/              ← 已完成轮次（R1 全套：方案 + 审计 ×2）
 ```
