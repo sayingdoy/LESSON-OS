@@ -47,8 +47,35 @@
     失去精确复现锚点（同版本号下代码可不同），且 Jason 已明确 Q5=A；
   - 方案 D：**只给 LESSON-OS 建 git** —— 否决：消费项目无 git 则无法 submodule。
 
-- **后续**：Q8 备份策略待落地（私有远端 / bundle）；见 Backlog P1-C。
-  🔴 **未解决 —— 4 个仓库仍全无远端**（单一真源只躺一块硬盘）。需 Jason 定方案。
+- **后续**：Q8 备份策略**已于 2026-10-10 闭环**（见下「备份闭环」）。
+
+---
+
+## 备份闭环（2026-10-10 完成）✅
+
+**远端载体 = 自建裸库（阿里云 ECS）**，四个仓库全部推送完成：
+
+| 本地仓库 | 远端 | 体积 | 提交数 |
+|---|---|---|---|
+| `D:\Projects\LESSON-OS` | `ecs:/srv/git/LESSON-OS.git` | 400K | 2 |
+| `D:\SixSigmaBlackBelt` | `ecs:/srv/git/SixSigmaBlackBelt.git` | 122M | 44 |
+| `D:\Projects\vocab-app` | `ecs:/srv/git/vocab-app.git` | 280K | 1 |
+| `D:\Projects\Project AI Kongzi` | `ecs:/srv/git/Project-AI-Kongzi.git` | 9.9M | 1 |
+
+**关键收尾：submodule URL 必须改指远端**（这是本次发现的隐藏缺陷）
+- 原 `.gitmodules` 的 url = `D:/Projects/LESSON-OS` —— **本机绝对路径**，
+  换机 / 换目录即失效，等于没有版本锚点。
+- 已改为 `ecs:/srv/git/LESSON-OS.git`（bb-prep commit `cb28793`），并 `git submodule sync`。
+- **验证**：从远端全新克隆 LESSON-OS → 20 文件、`__version__ = "0.1.0"` ✅；
+  在 ECS 本地克隆 bb-prep → 44 提交、`.gitmodules` 指向远端 ✅。
+
+**日常同步**：`bash D:\Projects\LESSON-OS\scripts\sync_all.sh`（`--dry` 只看不推）。
+
+**恢复方式**：`git clone ecs:/srv/git/<name>.git`
+
+> ⚠️ **残余风险（低于原「单点故障」）**：远在阿里云，但**无第三方托管**——
+> ECS 实例本身挂了就没有第二份。若要彻底闭环，P2 可加 `git bundle` 定期导出到网盘。
+> 当前状态已从 🔴「只躺一块硬盘」降为 🟡「异地单点」。
 
 ---
 

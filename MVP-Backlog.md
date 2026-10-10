@@ -60,12 +60,13 @@
 
 | # | 工单 | 验收 |
 |---|---|---|
-| C1 | 各仓库 `git init`（顺序：LESSON-OS → bb-prep → vocab-app → AI-Kongzi） | 4 个仓库就绪，内核先有版本可钉 |
-| C2 | 消费项目以 `git submodule` 钉 LESSON-OS commit | bb-prep 能 `import learn_engine` 且版本可追溯 |
-| C3 | 补 `__version__` bump 记录 + ADR 归档 | 版本语义与授权表（PLAYBOOK §11.5）落地 |
+| C1 | 各仓库 `git init`（顺序：LESSON-OS → bb-prep → vocab-app → AI-Kongzi） | ✅ **完成 2026-10-10**，4 仓库就绪 |
+| C2 | 消费项目以 `git submodule` 钉 LESSON-OS commit | ✅ **完成**：bb-prep `vendor/LESSON-OS` @`620a334`，URL 指向远端 |
+| C3 | 补 `__version__` bump 记录 + ADR 归档 | ⬜ 待做 |
 
-> **备份待决**：4 个仓库目前**全无远端**（`git remote -v` 空）→ 单一真源只躺一块硬盘。
-> 建议私有远端；退而 `git bundle` 单文件放别处。**C1 完成后必须解决，不可拖。**
+> **备份已闭环**：4 仓库全部推送至 `ecs:/srv/git/`（自建裸库，异地）。
+> 日常同步 `bash scripts/sync_all.sh`。详见 ADR-0003「备份闭环」。
+> 残余风险：ECS 单点（无第三方托管）→ P2 可加 bundle 到网盘。
 
 ---
 
