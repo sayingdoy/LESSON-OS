@@ -48,3 +48,27 @@
   - 方案 D：**只给 LESSON-OS 建 git** —— 否决：消费项目无 git 则无法 submodule。
 
 - **后续**：Q8 备份策略待落地（私有远端 / bundle）；见 Backlog P1-C。
+  🔴 **未解决 —— 4 个仓库仍全无远端**（单一真源只躺一块硬盘）。需 Jason 定方案。
+
+---
+
+## 执行记录（2026-10-10 完成）
+
+| 仓库 | 分支 | 首次/相关提交 |
+|---|---|---|
+| `D:\Projects\LESSON-OS` | `main` | `620a334` init v0.1.0 (planned) |
+| `D:\SixSigmaBlackBelt` | `master` | `d146401` 钉 submodule |
+| `D:\Projects\vocab-app` | `main` | `fa772c5` init |
+| `D:\Projects\Project AI Kongzi` | `main` | `27c72de` init |
+
+**submodule 落地**：bb-prep `.gitmodules` → `vendor/LESSON-OS` @ `620a334`；
+已验证 `import learn_engine` 返回 `__version__ = 0.1.0`。
+
+**关键落地细节（同步盘防污染）**：
+- 三个仓库的 `.gitignore` 均排除 **`.git/`** —— 这些目录被坚果云 / Obsidian 同步，
+  而 submodule 的 `.git` 是**文件**（`gitdir: ../../.git/modules/vendor/LESSON-OS`）
+  不是目录，同步盘搬运会污染。
+- vocab-app 额外排除 `交付成果/` / `.keys/` / `.voided/`（交付物与密钥必须隔离）。
+- AI-Kongzi 额外排除 `.obsidian/plugins/` / `themes/`（vendored 第三方二进制，同 bb-prep 惯例）。
+
+> ⚠️ **本 ADR 的「未解决风险」条依然成立**：4 仓库无远端 = 单点故障，未闭环。
