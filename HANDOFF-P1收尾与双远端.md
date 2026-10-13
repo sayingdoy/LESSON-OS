@@ -80,7 +80,12 @@
 | LIBGOV（治理层） | `D:\Projects\LIBGOV` | `main` | `253f80d` | ✅ 双（github **私有**） |
 | bb-prep（消费方） | `D:\SixSigmaBlackBelt` | `master` | `7e7b270` | ✅ 双 |
 | vocab-app | `D:\Projects\vocab-app` | `main` | — | ✅ 双（**待接入内核**） |
-| Project AI Kongzi | `D:\Projects\Project AI Kongzi` | `main` | — | ✅ 双（有 **8 项未提交**，既存） |
+| Project AI Kongzi | `D:\Projects\Project AI Kongzi` | `main` | — | ✅ 双（有 **9 项未提交**，既存） |
+
+> ⚠️ **注册表 `ROOTS` ≠ 五仓**：`build_registry.py` 另扫 3 个目录 ——
+> `jev-gate`（有标签、已入库）、`tool-result-gate` / `jev-primitives`
+> （**无 frontmatter 标签**，均 git init 后**零提交**；未入库状态已记录在案）。
+> `--check` 退出码 1 即由后两者触发（详见上方「退出码实测勘误」）。
 
 - 远端：`origin` = `ecs:/srv/git/<name>.git`（异地主）；`github` = `github.com/sayingdoy/<name>`（**私有**，异地次）
 - 一键同步：`bash D:\Projects\LESSON-OS\scripts\sync_all.sh`（`--dry` 只看不推）
@@ -95,24 +100,41 @@
 
 ```bash
 cd D:/Projects/LESSON-OS
-python -m learn_engine.tests.golden_set          # 期望 47/47 全过
-python ../LIBGOV/registry/build_registry.py --check   # 期望退出码 0、无版本漂移
+python -m learn_engine.tests.golden_set               # 实测 47/47 全过 ✅
+python ../LIBGOV/registry/build_registry.py --check   # 退出码见下方勘误
 ```
+
+> ⚠️ **退出码实测勘误（2026-10-13 18:18 复测）**：上文原写「期望退出码 0」——
+> **实测为 1**。根因**不是版本漂移**（漂移检测 ✅ 未发现任何漂移），而是 `ROOTS` 中
+> `tool-result-gate` / `jev-primitives` **无 frontmatter 标签**（门槛③不过）；
+> 该状态在 `registry/REGISTRY.md`「未入库（记录在案）」节**早已登记**，
+> 属**已知待补齐、非回归**。B7 实装后，漂移检测已扩到 `DOC_CANDIDATES` 全量
+> （`AGENTS.md:6` 的散文版本引用首次进入机械检查范围）。
 
 ---
 
 ## 三、下一步（交接给下一 agent）
 
 1. **B6** —— `picker` / `scheduler` / `vault` 内部**四份同源日期解析**收敛到一处（技术债）。
-2. **B7** —— **版本引用机械检查**：把 `build_registry.py` 的扫描扩到
-   `DOC_CANDIDATES` 全量，或立「版本只在 PLAYBOOK frontmatter 出现一次、
-   其余文档只链接不写值」的 SSOT 规则。
-   > **过渡期纪律**：**每次改内核后，人工复扫 `AGENTS.md` / `README.md` / `PLAYBOOK.md`。**
+2. **B7** —— ✅ **已完成（2026-10-13 18:18，承接 agent 实装于 LIBGOV 仓）**：
+   `build_registry.py` 新增 `scan_doc_versions()` + `version_audit()`，扫描扩到
+   `DOC_CANDIDATES` **全量** —— frontmatter 版本 ≠ `__version__` → **硬失败**
+   （`--check` 退出码 1）；跨文档 frontmatter 不一致 → 硬失败；散文「版本 X.Y.Z」
+   不符 → **警告**（只报不改，对齐 G5）。两段式（如 PLAYBOOK 手册版「版本 0.4」）
+   不匹配以防误报。单测 6/6 + 实仓集成验证通过（`AGENTS.md:6` 散文引用
+   首次进入机械检查范围；REGISTRY.md 重生成幂等）。
+   > **过渡期纪律仍然有效**：散文层仅为警告级，**每次改内核后仍须人工复扫**
+   > `AGENTS.md` / `README.md` / `PLAYBOOK.md`；彻底收敛需选项②
+   > （版本只在 PLAYBOOK frontmatter 出现一次、其余只链接不写值）——
+   > 建议留待下次内核 bump 时一并做，并可立 ADR-0009 记录分级判据。
 3. **P2** —— vocab-app / AI-Kongzi 接入 `learn_engine` → 门槛①达标（≥2）→
    `maturity: implemented → adopted`；并沉淀 `tutor-prompt-library` 技能库。
 4. **待 Owner 复核** —— bb-prep `L15`（`II.A.1`，`judged: false`）**已开课未判**，
    当前**未计入**「已讲 = 14」。
-5. **次要** —— `Project AI Kongzi` 有 8 项未提交（既存，非本对话产生，未擅自处理）。
+5. **次要** —— `Project AI Kongzi` 有 **9 项未提交**（既存，非本对话产生，未擅自处理）：
+   1 M + 7 D + 1 ??，**全部是 Obsidian 插件产物**（lazy-plugins data.json、
+   binary-file-manager 插件文件、meld-encrypt/），无业务代码。提交 / gitignore /
+   维持原状，待 Owner 定。
 
 ---
 
@@ -174,3 +196,17 @@ python ../LIBGOV/registry/build_registry.py --check   # 期望退出码 0、无�
 ---
 
 _本文件生成于 2026-10-13 17:48。_
+
+---
+
+## 修订记录
+
+- **2026-10-13 18:18（承接 agent，第二个会话）**：
+  - 勘误①：`--check` 退出码「期望 0」→ **实测 1**（根因：2 个无标签仓触发门槛③，
+    非版本漂移；该状态早已登记在案）。原声明疑因未实际读取退出码 ——
+    **再次印证本文件纪律「数字必须实测」**（继 46/47 之后第二处失实）。
+  - 勘误②：五仓表补注 `ROOTS` 另 3 仓（jev-gate / tool-result-gate / jev-primitives）。
+  - 勘误③：AI Kongzi 未提交 8 → **9 项**（附构成明细）。
+  - 状态更新：B7 ✅ 已实装（LIBGOV `build_registry.py`，**本地 commit 未推送**，
+    待 Owner 确认后 `sync_all.sh`）。
+  - 未动：B6 / P2 / L15 / AI Kongzi 工作区（范围外或待确认）。
