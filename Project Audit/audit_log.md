@@ -149,3 +149,54 @@ R1 的 1 处 🟡 待修项（LADDER 非逐字节相同）**已于本轮闭环**
 
 - P1-A4 是**新增必要条件**：内核 picker 与 bb-prep `pick_items` 输出要在同 seed 下一致，
   否则 A3 的「逐字节相同」判据必失败（真源的贪心+上限尚未移入）。
+
+---
+
+## 2026-10-13 · P1-A4 落地（内核 → `0.3.0`）+ 治理层 LIBGOV 建立
+
+- **授权方**：Jason（Owner），指示「好的，按你说的执行」
+- **执行方**：agent（workbuddy）
+- **Verdict**：✅ **A4 完成并验收；LIBGOV 建仓并推送**
+
+### 1. P1-A4 —— 内核与 bb-prep 出卷行为对齐
+
+| 项 | 内容 |
+|---|---|
+| 改动 | `learn_engine/picker.py`：新增 `import math`；`fresh = new[:new_n]` → 「按域缺口贪心 + 温和上限 `cap=⌈w/tot·n⌉+1`」循环 |
+| 真源 | bb-prep `src/practice.py:181-217`（`pick_items` 的 `weighted` 分支）—— **逐行同构** |
+| rng 纪律 | 消耗顺序严格保持：`exam_first` 排序 → `shuffle(due)` → 贪心循环（每次候选比较各取一次 `random`） |
+| 版本 | `0.2.0 → 0.3.0`（**行为变更**：同 rng 下新题档与 0.2.0 不同） |
+| 验收 | golden-set **16 项全过**（13 + 新增 3）：`test_cap_limits_dominant_domain`（合成样本：欠配域被拉入且被 cap 截在 2 题）、`test_greedy_not_naive_prefix`、`test_domain_cap_respected_in_golden` |
+| 手算复核 | golden 场景逐步推演（D7 先抽 4 → D1 触顶 4 让位 → D2 触顶 3 → D6 → D5）与代码输出**完全一致** |
+| 基线 | 新增 `learn_engine/tests/golden_v0.3.0.json`（0.2.0 基线保留为历史） |
+| 工具 | `golden_set.py` 增 `--save <path>`（显式 UTF-8/LF，避免 Windows 重定向乱码） |
+
+#### 🔴 新发现（A3 前置裁决项）
+
+内核 `pick()` 的**补位分支**与真源语义不同：
+- 内核：按 `item["state"]` 把候选题**路由回** `review`/`fresh`；
+- 真源 `pick_items`：`fresh += rest[:need]`（**一律并入 `fresh`**）。
+
+**仅在候选池不足时触发**，golden-set 不覆盖该路径。A3 的「逐字节相同」判据
+**必须先裁决取哪一侧**（登记于 `MVP-Backlog` P1-A 节，给出三个选项）。
+
+### 2. 治理层 LIBGOV 建仓（D-1 后续动作）
+
+| 项 | 内容 |
+|---|---|
+| 仓库 | `D:\Projects\LIBGOV` `git init`（`main`），13 文件入库 |
+| 远端 | `origin` = `ecs:/srv/git/LIBGOV.git` ✅ **已推**；`github` **仅配置未推**（含内部项目名，待 Owner 确认可见性） |
+| 规范 | 新增 `.gitignore`（排除 `tools/skills-index/_backup/` 等）、`.gitattributes`（统一 LF） |
+| 🔴 修复 | ECS 裸库 `HEAD` 误指 `master`（分支实为 `main`）→ `symbolic-ref HEAD refs/heads/main`；**克隆验证通过**（13 文件、commit `283477b` 一致） |
+| 联动 | `scripts/sync_all.sh` 纳入 LIBGOV（4 仓 → 5 仓） |
+
+> **副产物**：本次核验同时确认其余 4 个 ECS 裸库 `HEAD` 与分支**均一致**，无同类隐患。
+
+### 决策链追加
+
+| 日期 | 决策 | 依据 |
+|------|------|------|
+| 2026-10-13 | **A4 采用"真源逐行同构"而非"重新设计"** | A3 判据是逐字节相同；语义改良会让 A3 无法闭环 |
+| 2026-10-13 | `0.3.0` 定性为**行为变更**（非纯 MINOR 增量） | 同 rng 下输出变化 → 消费方必须重跑验收（G3） |
+| 2026-10-13 | `github` 远端**只配置不推送** | LIBGOV 文档含内部项目名与本地路径，可见性须 Owner 决定 |
+| 2026-10-13 | 补位分支差异**登记不擅改** | 属语义级选择，且只有 Owner 能定 A3 取哪一侧 |

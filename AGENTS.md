@@ -60,7 +60,7 @@ Project Audit/         ← R1 方案与审计归档
 |---|---|
 | 改 API / 契约 | `PLAYBOOK.md` §4（API 契约）+ §5（判定铁律） |
 | 碰到「这该不该抽进内核」 | `PLAYBOOK.md` §10（触发协议）+ §9（已知差异，**留在项目别抽**） |
-| 新建 / 登记标准库 | `PLAYBOOK.md` §11 + `D:\Projects\lib-index\REGISTRY.md` |
+| 新建 / 登记标准库 | `PLAYBOOK.md` §11 + `D:\Projects\LIBGOV\registry\REGISTRY.md` |
 | 开新项目 | 必答：「本项目消费 LESSON-OS 吗？钉哪个版本？」（§10.1 入口 A） |
 | bump 版本 | §11.5 语义表 |
 

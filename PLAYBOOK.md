@@ -2,12 +2,12 @@
 kind: kernel
 domain: learning
 maturity: planned
-version: 0.1.0
+version: 0.3.0
 ---
 
 # LESSON-OS · 跨项目共享学习内核手册（PLAYBOOK）
 
-> 版本 0.1 | 建立 2026-10-10 | Owner: Jason
+> 版本 0.3 | 建立 2026-10-10 | Owner: Jason
 > 本文件是 **bb-prep / vocab-app / AI-Kongzi（LearningOS）** 三个学习类项目的
 > **单一真源（SSOT）**：沉淀"学习 + 复习 + 错题复盘"循环的共性经验与优化点，
 > 让每次开发都能复用、复用滚雪球，且核心更新不误伤其他项目、交付可整包脱离代码库。
@@ -270,7 +270,7 @@ AI-Kongzi `modules/错题整理系统/` 已建此闭环，可作参考实现；b
 ## 11. 标准库注册规范（SSOT）
 
 > 本节定义：**什么样的资产配进「标准库」**，以及标签怎么写。
-> 注册表本体在 `D:\Projects\lib-index\REGISTRY.md`。
+> 注册表本体在 `D:\Projects\LIBGOV\registry\REGISTRY.md`。
 
 ### 11.1 入库门槛（三条，全中才入库）
 
@@ -306,7 +306,7 @@ version: 0.1.0
 ### 11.3 双轨原则（防双 SSOT）
 
 - **各库 frontmatter = 真源**（人读入口）
-- **`lib-index/REGISTRY.md` = 生成物**（`build_registry.py` 扫描产出，**明令禁止手改**）
+- **`LIBGOV/registry/REGISTRY.md` = 生成物**（`build_registry.py` 扫描产出，**明令禁止手改**）
 
 ### 11.4 检索入口
 

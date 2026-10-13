@@ -19,8 +19,17 @@
     - B3 验收判据补「固定 rng 种子」（见 ADR-0002）
     - B4 新增 `POOL_NEW` 常量；`new` 明确为**哨兵**而非 SRS 状态
     - 新增 golden-set 验收脚本（固定 rng，可逐字节比对）
+  0.3.0（2026-10-13）P1-A4 内核与 bb-prep 出卷行为对齐：
+    - `WeightedPicker` 补齐真源的「新题按域缺口**贪心**取 + **温和上限**
+      `cap = ⌈w/tot·n⌉ + 1`」（真源 bb-prep `src/practice.py:181-217`）。
+      此前新题档为"排序后取前缀"，与 bb-prep 卷面九域分布不一致（B2 遗留债）。
+    - golden-set 新增 3 项 A4 断言（贪心生效 / 上限约束 / 非朴素前缀），**共 16 项**
+    - **⚠️ 行为变更**：同一 rng 下新题档与 0.2.0 **不同** →
+      消费方升级后必须重跑验收（G3），并对齐 golden 基线。
+    - 已知剩余差异：池不足时的**补位分支**语义（内核按 state 路由回 review/fresh
+      两档；真源一律并入 fresh）—— 待 A3 前裁决。
 """
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 from .model import Item, DEFAULT_LADDER, MASTER_STAGE, STATES, POOL_NEW
 from .scheduler import is_due, next_schedule, apply_result

@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import math
 import random
 
 from .model import DEFAULT_LADDER, POOL_NEW
@@ -44,10 +45,15 @@ class WeightedPicker(Picker):
       - **九域欠配**作排序权重，不删题（deficit = 期望累计 − 实际累计）；
       - **真题优先**（exam_first）：新题名额优先给真题池，自建题补缺口。
 
-    ⚠️ 已知与真源的差距（**P1-A 待补**，见 MVP-Backlog 与 audit_log B2）：
-      真源的「新题贪心取 + 温和上限 `cap=⌈w/tot·n⌉+1`」尚未移入本骨架；
-      当前仅按注入的 `recent`/`weighted` 过滤 + 排序。P1-A 必须补齐，
-      否则卷面九域分布会与 bb-prep 现行为不同。
+    ✅ **A4 已补（2026-10-13）**：真源的「**新题按域缺口贪心取 + 温和上限
+       `cap = ⌈w/tot·n⌉ + 1`**」已移入（真源 `src/practice.py:181-217`，
+       `pick_items` 的 `weighted` 分支），本类与 bb-prep 在此项上**行为同源**。
+
+    ⚠️ **与真源的剩余已知差异**（A3 前须裁决；见 MVP-Backlog）：
+       池不足时的**补位分支**语义不同 ——
+       内核按 `item["state"]` 把候选题**路由回** `review`/`fresh` 两档；
+       真源 `pick_items` 的收尾是 `fresh += rest[:need]`（**一律并入 `fresh`**）。
+       该差异**仅在候选池不足时触发**，golden-set 不覆盖此路径。
     """
 
     def pick(self, review_n, new_n, items, rng, ref, *,
@@ -98,7 +104,51 @@ class WeightedPicker(Picker):
                                     _as_date(i.get("due")) or dt.date.min))
         review = due[:review_n]
 
-        fresh = new[:new_n]
+        # ── 新题档：按域缺口贪心取 + 温和上限（A4，2026-10-13）────────────────
+        # 真源：bb-prep `src/practice.py:181-217`（`pick_items` 的 weighted 分支）。
+        #
+        # 为什么「贪心」和「上限」必须并用（真源实测教训，勿删）：
+        #   · 纯随机取新题 → 长期出题分布与官方大纲脱节（实测 D2-过程管理一次都没出过）；
+        #   · 只按欠配贪心 → 某个长期欠练的域会在**单卷**里独占（实测单卷 D6 占 41.7%）；
+        #   故：先在上限内挑「欠配最多」的域，**全部触顶才放开上限**
+        #       （宁可覆盖不足，也不留空位）。
+        # 上限 = ⌈目标占比 × 本卷题量⌉ + 1；**已入选的复习题先计入 `cur`**，
+        # 避免复习题已经覆盖的域再被重复倾斜。
+        #
+        # ⚠️ rng 消耗顺序必须与真源严格一致（A3 逐字节比对的前提）：
+        #    exam_first 排序 → `shuffle(due)` → 本循环（每次候选比较各取一次 random）。
+        if weighted:
+            n_sheet = review_n + new_n
+            tot = sum((domain_weights or {}).values())
+            cap = ({d: max(1, math.ceil(w / tot * n_sheet) + 1)
+                    for d, w in (domain_weights or {}).items()} if tot else {})
+            run = dict(deficit)               # 运行中的欠配量（复习题入选即扣减）
+            cur: dict[str, int] = {}          # 运行中的各域已占名额
+            for i in review:
+                d = _dom(i)
+                run[d] = run.get(d, 0.0) - 1.0
+                cur[d] = cur.get(d, 0) + 1
+            chosen: list[dict] = []
+            used: set[str] = set()
+            for _ in range(new_n):
+                cand = [i for i in new if _key(i) not in used]
+                if not cand:
+                    break
+                # 先在上限内挑；全部触顶就去掉上限（宁可覆盖不足也不留空位）
+                pool_c = [i for i in cand
+                          if cur.get(_dom(i), 0) < cap.get(_dom(i), 99)]
+                best = max(pool_c or cand,
+                           key=lambda i: (run.get(_dom(i), 0.0),
+                                          bool(is_exam(i)), rng.random()))
+                chosen.append(best)
+                used.add(_key(best))
+                d = _dom(best)
+                run[d] = run.get(d, 0.0) - 1.0
+                cur[d] = cur.get(d, 0) + 1
+            fresh = chosen
+        else:
+            # 不加权：退回旧行为（保持 `new` 的「真题优先」前缀，**不得再 shuffle**）
+            fresh = new[:new_n]
 
         # 补位：回退池同样排除 recent 的**新题**（防"剔除后又从补位塞回"），
         # 但**到期复习题允许回退**（spaced repetition 优先于去重）。

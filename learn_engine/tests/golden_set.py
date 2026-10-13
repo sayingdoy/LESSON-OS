@@ -8,8 +8,9 @@
   任何测试都不得用 `Random(None)`。
 
 用法：
-  python -m learn_engine.tests.golden_set            # 跑验收（打印摘要）
-  python -m learn_engine.tests.golden_set --dump     # 打印 golden 输出（供比对）
+  python -m learn_engine.tests.golden_set                 # 跑验收（打印摘要）
+  python -m learn_engine.tests.golden_set --dump          # 打印 golden 输出（供比对）
+  python -m learn_engine.tests.golden_set --save <path>   # 写 golden 基线（UTF-8/LF）
 
 纯 stdlib `unittest`，不引 pytest（守零外部依赖铁律）。
 """
@@ -30,6 +31,12 @@ from ..vault import parse_front
 # ── 固定常量（ADR-0002：不得临场改）────────────────────────────────────────
 FIXED_SEED = 20261010
 FIXED_TODAY = dt.date(2026, 10, 11)
+
+# golden 场景的**注入数据**（固定；集中于此便于断言复用，勿散落到用例里）
+GOLDEN_REVIEW_N, GOLDEN_NEW_N = 10, 12
+GOLDEN_WEIGHTS = {"D1-组织开展": 10, "D2-过程管理": 7, "D5-测量": 22,
+                  "D6-分析": 22, "D7-改进": 22}
+GOLDEN_HIST = {"D5-测量": 30, "D6-分析": 10}
 
 
 # ── 固化样本 items（golden-set 的"固定一批"）────────────────────────────────
@@ -86,9 +93,8 @@ def _run_pick(items, review_n, new_n, recent, weighted=True):
         review_n, new_n, items, rng, FIXED_TODAY,
         exclude=set(), exam_first=True, weighted=weighted,
         recent=recent,
-        history_counts={"D5-测量": 30, "D6-分析": 10},
-        domain_weights={"D1-组织开展": 10, "D2-过程管理": 7, "D5-测量": 22,
-                        "D6-分析": 22, "D7-改进": 22},
+        history_counts=dict(GOLDEN_HIST),
+        domain_weights=dict(GOLDEN_WEIGHTS),
         is_exam=lambda i: bool(i.get("exam")),
         ladder=DEFAULT_LADDER,
     )
@@ -106,9 +112,10 @@ def golden_output() -> dict:
     return {
         "seed": FIXED_SEED,
         "today": FIXED_TODAY.isoformat(),
-        "main": _run_pick(items, 10, 12, recent, weighted=True),
-        "no_weight": _run_pick(items, 10, 12, recent, weighted=False),
-        "gap0": _run_pick(items, 10, 12, set(), weighted=True),
+        "main": _run_pick(items, GOLDEN_REVIEW_N, GOLDEN_NEW_N, recent, weighted=True),
+        "no_weight": _run_pick(items, GOLDEN_REVIEW_N, GOLDEN_NEW_N, recent,
+                               weighted=False),
+        "gap0": _run_pick(items, GOLDEN_REVIEW_N, GOLDEN_NEW_N, set(), weighted=True),
     }
 
 
@@ -163,6 +170,71 @@ class TestGoldenSet(unittest.TestCase):
         nw_r = g["no_weight"]["review"]
         self.assertNotEqual(main_r, nw_r,
                             "加权/不加权结果应不同（否则权重是空转的）")
+
+
+class TestNewPoolGreedy(unittest.TestCase):
+    """A4：新题档「按域缺口贪心 + 温和上限 cap=⌈w/tot·n⌉+1」。
+
+    真源：bb-prep `src/practice.py:181-217`（`pick_items` 的 weighted 分支）。
+    这里用**极小合成样本**把两条性质分别钉死，避免 golden 场景里互相掩盖：
+      ① 贪心：严重欠配的域即使目标权重极低，也必须被拉进新题档；
+      ② 上限：它不得因此独占整卷 —— 触顶即让位。
+    """
+
+    @staticmethod
+    def _items():
+        out: list[dict] = []
+        for dom, prefix in (("A", "a"), ("B", "b")):
+            for i in range(20):
+                out.append({"id": f"{prefix}-{i:02d}", "state": POOL_NEW,
+                            "due": "", "domain": dom, "exam": True})
+        return out
+
+    def _pick(self, weights, hist, review_n, new_n):
+        rng = random.Random(FIXED_SEED)
+        review, fresh = WeightedPicker().pick(
+            review_n, new_n, self._items(), rng, FIXED_TODAY,
+            exclude=set(), exam_first=True, weighted=True, recent=set(),
+            history_counts=hist, domain_weights=weights,
+            is_exam=lambda i: bool(i.get("exam")),
+            ladder=DEFAULT_LADDER)
+        return review, fresh
+
+    def test_cap_limits_dominant_domain(self):
+        """贪心拉入欠配域 A，但 cap=⌈1/100·10⌉+1=2 把它截在 2 题。"""
+        from collections import Counter
+        # A 目标权重 1/100，历史累计 0 → 欠配 1.0；B 历史 100 → 超配 -1.0
+        _, fresh = self._pick({"A": 1, "B": 99}, {"B": 100}, 0, 10)
+        self.assertEqual(len(fresh), 10)
+        c = Counter(i["domain"] for i in fresh)
+        self.assertEqual(c["A"], 2,
+                         "欠配域 A 应被贪心选中、且被温和上限截在 2（cap=2）")
+        self.assertEqual(c["B"], 8)
+
+    def test_greedy_not_naive_prefix(self):
+        """加权的新题档不得等于 `new[:n]` 朴素前缀（否则 A4 是空转的）。"""
+        g = golden_output()
+        self.assertNotEqual(
+            g["main"]["fresh"], g["no_weight"]["fresh"],
+            "加权 / 不加权的新题档应不同 —— 若相同则贪心分支未生效（A4 回退）")
+
+    def test_domain_cap_respected_in_golden(self):
+        """golden 主场景：review+fresh 各域名额不超过 cap（复习题自带名额除外）。"""
+        import math
+        from collections import Counter
+        byid = {i["id"]: i for i in _golden_items()}
+        out = golden_output()["main"]
+        tot = sum(GOLDEN_WEIGHTS.values())
+        n_sheet = GOLDEN_REVIEW_N + GOLDEN_NEW_N
+        cap = {d: max(1, math.ceil(w / tot * n_sheet) + 1)
+               for d, w in GOLDEN_WEIGHTS.items()}
+        c_rev = Counter(byid[i]["domain"] for i in out["review"])
+        c_all = Counter(byid[i]["domain"] for i in out["review"] + out["fresh"])
+        for d in GOLDEN_WEIGHTS:
+            self.assertLessEqual(
+                c_all[d], max(cap[d], c_rev[d]),
+                f"{d} 超出温和上限：{c_all[d]} > cap={cap[d]}"
+                f"（复习题已自带 {c_rev[d]}）")
 
 
 class TestJudgeContract(unittest.TestCase):
@@ -222,6 +294,15 @@ class TestFrontIOParse(unittest.TestCase):
 def main() -> None:
     if "--dump" in sys.argv:
         print(json.dumps(golden_output(), ensure_ascii=False, indent=2))
+        return
+    if "--save" in sys.argv:
+        i = sys.argv.index("--save")
+        path = sys.argv[i + 1] if len(sys.argv) > i + 1 else "golden.json"
+        # 显式 UTF-8 + LF：Windows 下重定向 stdout 会走本地代码页，
+        # 中文会变乱码；基线文件必须稳定可 diff。
+        with open(path, "w", encoding="utf-8", newline="\n") as f:
+            f.write(json.dumps(golden_output(), ensure_ascii=False, indent=2) + "\n")
+        print(f"golden 基线已写入 {path}")
         return
     loader = unittest.TestLoader()
     suite = loader.loadTestsFromModule(sys.modules[__name__])

@@ -12,17 +12,20 @@
 |---|---|
 | P0 手册 + SSOT schema + 路线图 + 骨架 | ✅ 完成 |
 | **R1 契约修正（裁决 B1–B5 / A3余 / C1余）** | ✅ **完成 2026-10-11**（内核 → `0.2.0`） |
-| **P1 抽代码（本 backlog）** | ⬜ 待启动 |
+| **P1 抽代码（本 backlog）** | 🟡 **进行中**：A1 ✅ / A4 ✅ / A2·A3 待做 |
 | P2 接入 + 技能库 | ⬜ 待启动 |
 | FSRS 后端 | ⬜ P2 候选 |
 
 **技术债清单**（P1 要还的）：
-- `vault.write_front` → `NotImplementedError`
-- `grader.Grader.judge` → 基类占位，bb-prep adapter 缺失
-- `picker.WeightedPicker.pick` → **有新债**：真源的「新题贪心 + 温和上限
-  `cap=⌈w/tot·n⌉+1`」未移入（B2 已知差距，必须 A 片补齐）
+- `vault.write_front` → `NotImplementedError`（**A2**）
+- `grader.Grader.judge` → 基类占位，bb-prep adapter 缺失（**P1-B1**）
 - `picker` / `scheduler` / `vault` 内部**四份同源日期解析**（B6，P1 收敛到一处）
-- ✅ **已清**：`tests/` + golden-set 已建（2026-10-11）
+- 🔴 **新登记（2026-10-13，A4 实施时发现）**：`picker` 的**补位分支**与真源语义不同 ——
+  内核把候选题按 `item["state"]` **路由回** `review`/`fresh` 两档；真源 `pick_items`
+  收尾是 `fresh += rest[:need]`（**一律并入 `fresh`**）。**仅在候选池不足时触发**，
+  golden-set 不覆盖该路径 → **A3 逐字节比对前必须先裁决取哪一侧**。
+- ✅ **已清**：`tests/` + golden-set 已建（2026-10-11，13 项）
+- ✅ **已清**：`picker` 新题贪心 + 温和上限已移入（2026-10-13，A4，断言 16 项）
 
 > **R1 契约修正已完成**（2026-10-11，内核 `0.1.0 → 0.2.0`）：
 > B1 `judge` → `str`；B2 `pick` 显式注入（去重/权重不再空转）；B3 ADR-0002 固定 `rng`
@@ -41,7 +44,15 @@
 | A1 | 建 `learn_engine/tests/` + golden-set 骨架 | ✅ **完成 2026-10-11**（13 项断言全过，基线存 `golden_v0.2.0.json`） |
 | A2 | 实装 `vault.write_front`（只改已存在的 frontmatter 键，正文一字不动） | 单测：改前 / 改后逐字节比对，**正文零变化** |
 | A3 | bb-prep `src/bbcore.py` 排期逻辑改为 `import learn_engine` | 改前 / 改后出卷**逐字节相同** |
-| A4 | **补 `picker` 的新题贪心 + 温和上限**（B2 遗留） | 与 bb-prep `pick_items` 在同一 seed 下输出一致 |
+| A4 | **补 `picker` 的新题贪心 + 温和上限**（B2 遗留） | ✅ **完成 2026-10-13**（内核 → `0.3.0`；断言 16 项全过；与真源 `src/practice.py:181-217` 同源） |
+
+> **⚠️ A3 前置裁决项（2026-10-13 实施 A4 时发现）**：内核 `pick()` 的**补位分支**
+> 按 `state` 路由回 `review`/`fresh`；真源 `pick_items` 一律并入 `fresh`。
+> 该差异**只在候选池不足时触发**，golden-set 不覆盖。
+> **A3 要求"改前 / 改后逐字节相同"，故必须先裁决**（三选一）：
+> ① 内核改为与真源一致（一律并入 `fresh`）；
+> ② 内核保留现状，bb-prep 侧**不调用**内核的补位（只取纯排期结果，补位仍留 `main()`）；
+> ③ `pick()` 增参数 `fallback="route"|"flat"`，由消费方显式选择。
 
 **预登记（写死在前面，不许事后改）**：
 > **P1-A 通过判据**：A2 单测全过 + A3 的 bb-prep 出卷输出与改前**逐字节一致**。
