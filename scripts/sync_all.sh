@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# 一键推送飞轮的 4 个仓库到私有远端（ECS 裸库）。
+# 一键推送本地各仓库到私有远端（ECS 裸库）：飞轮 4 仓 + 治理层 LIBGOV。
 #
-# 背景：飞轮的「单一真源」必须有异地备份。本脚本把 4 个仓库一次推完，
+# 背景：「单一真源」必须有异地备份。本脚本把各仓库一次推完，
 #       并自动报告状态，避免"某个仓库忘了推"导致的静默漂移。
 #
 # 用法：
@@ -14,6 +14,7 @@ set -u
 
 REPOS=(
   "D:/Projects/LESSON-OS"
+  "D:/Projects/LIBGOV"
   "D:/SixSigmaBlackBelt"
   "D:/Projects/vocab-app"
   "D:/Projects/Project AI Kongzi"
