@@ -2,7 +2,7 @@
 kind: kernel
 domain: learning
 maturity: implemented
-version: 0.4.0
+version: 0.5.0
 ---
 
 # LESSON-OS · 跨项目共享学习内核手册（PLAYBOOK）

@@ -35,13 +35,26 @@
       新键追加 / 幂等 / 值写法 / 异常路径），**共 25 项**。
     - **选题行为未变**：golden 输出与 0.3.0 逐字节相同（`golden_v0.4.0.json`
       与 `golden_v0.3.0.json` 一致即证）。
+  0.5.0（2026-10-13）P1-B1 判分原语（bb-prep 风格 adapter）：
+    - 新增四个**领域无关判分原语**（真源 bb-prep `src/bbcore.py:364-453`）：
+      `LetterSetGrader`（选项字母集）/ `TrueFalseGrader`（判断题）/
+      `NumericGrader`（数值 + 逐题容差）/ `KeywordGrader`（要点题关键词全含）。
+      一切**项目策略**（中文分隔符 `；思路：`、真值词表、字母范围、容差）由消费方
+      **注入** —— 内核不预设中文习惯、不认识 qtype；**路由留消费方**。
+    - `NumericGrader` 对齐真源的 `float(x or 0.01)`：**tol 为 falsy 即回退默认**
+      （不把 `0` 当零容差）；calc **不截断思路**（思路里的数字也参与比对）——
+      两处都是真源既有语义，**保持等价、不"顺手修"**。
+    - golden-set 新增 21 项（4 类判决 + 每类一条"换注入 → 结果变"的参数化证明），
+      **共 46 项**。
+    - ⚠️ 纯新增能力：既有 `ExactMatchGrader` 与选题/排期行为**完全未变**。
 """
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 from .model import Item, DEFAULT_LADDER, MASTER_STAGE, STATES, POOL_NEW
 from .scheduler import is_due, next_schedule, apply_result
 from .vault import parse_front, write_front, as_date
-from .grader import Grader, ExactMatchGrader
+from .grader import (Grader, ExactMatchGrader, LetterSetGrader, TrueFalseGrader,
+                     NumericGrader, KeywordGrader)
 from .picker import Picker, WeightedPicker
 
 __all__ = [
@@ -49,5 +62,6 @@ __all__ = [
     "is_due", "next_schedule", "apply_result",
     "parse_front", "write_front", "as_date",
     "Grader", "ExactMatchGrader",
+    "LetterSetGrader", "TrueFalseGrader", "NumericGrader", "KeywordGrader",
     "Picker", "WeightedPicker",
 ]

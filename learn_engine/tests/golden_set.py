@@ -19,6 +19,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import random
+import re
 import sys
 import tempfile
 import unittest
@@ -27,7 +28,8 @@ from pathlib import Path
 from ..picker import WeightedPicker
 from ..model import POOL_NEW, DEFAULT_LADDER
 from ..scheduler import next_schedule
-from ..grader import ExactMatchGrader
+from ..grader import (ExactMatchGrader, LetterSetGrader, TrueFalseGrader,
+                      NumericGrader, KeywordGrader)
 from ..vault import parse_front, write_front
 
 # ── 固定常量（ADR-0002：不得临场改）────────────────────────────────────────
@@ -249,6 +251,163 @@ class TestJudgeContract(unittest.TestCase):
         self.assertEqual(g.judge("", "hello"), "wrong")
         self.assertIsInstance(g.judge("x", "y"), str,
                               "judge 必须返回 str，不得返回 bool（B1 裁决）")
+
+
+# ── P1-B1：bb-prep 风格判分原语（9 个历史边界用例的回归）─────────────────────
+# 真源：bb-prep `src/bbcore.py:364-453`；事故记录 `docs/变更记录/2026-10-06-判分器缺陷修复.md`。
+# 四个原语一切**项目策略**均由消费方注入 —— 下面每类都带一条"注入不同策略 →
+# 结果不同"的断言，证明内核**没有**把中文分隔符 / 词表写死。
+SPLIT_BBPREP = re.compile(r"[；;。\n]|思路")     # bb-prep 真源分隔符
+TF_TRUE = {"对", "正确", "是", "√", "t", "true", "y", "yes", "✓"}
+TF_FALSE = {"错", "错误", "否", "×", "x", "f", "false", "n", "no", "✗"}
+NUM_RE = re.compile(r"-?\d+(?:\.\d+)?")
+
+
+class TestLetterSetGrader(unittest.TestCase):
+    """选项字母集。历史 bug ①（未 upper）与 ②（未截断思路）在此锁死。"""
+
+    def setUp(self):
+        self.g = LetterSetGrader(split_re=SPLIT_BBPREP)
+
+    def test_lowercase_normalized(self):
+        """bug ①：手打小写（c / ab）不得判错。10-06 的 10 题里 6 题因此误判。"""
+        self.assertEqual(self.g.judge("c", "C"), "correct")
+        self.assertEqual(self.g.judge("ab", "AB"), "correct")
+        self.assertEqual(self.g.judge("a", "A"), "correct")
+
+    def test_multichoice_unordered(self):
+        self.assertEqual(self.g.judge("acde", "ACDE"), "correct")
+        self.assertEqual(self.g.judge("dcae", "ACDE"), "correct")   # 顺序无关
+
+    def test_truncates_chinese_reasoning(self):
+        """bug ②：『B；思路：…XBARR 图…』的 A/B 不得被抓成选项。
+
+        真源（10-05 第 5 题）：XBARR 的 X/B/A/R/R 里 A、B 在 A-H 内，
+        不截断就会把已答对的 `B` 判成 `AB` → 误判。
+        """
+        raw = "B；思路：这题和 XBARR 图的差异我还没想清楚"
+        self.assertEqual(self.g.letters(raw), "B")
+        self.assertEqual(self.g.judge(raw, "B"), "correct")
+
+    def test_partial_selection_is_wrong(self):
+        """漏选直接判错（Jason 的多选薄弱点）。"""
+        self.assertEqual(self.g.judge("A", "AB"), "wrong")
+        self.assertEqual(self.g.judge("ABC", "AB"), "wrong")
+
+    def test_blank_is_wrong(self):
+        self.assertEqual(self.g.judge("", "AB"), "wrong")
+        self.assertEqual(self.g.judge("   ", "AB"), "wrong")
+        self.assertEqual(self.g.judge("不知道", "AB"), "wrong")
+
+    def test_letters_dedup_and_sort(self):
+        self.assertEqual(self.g.letters("bbaa"), "AB")
+        self.assertEqual(self.g.letters("D.A.C"), "ACD")
+
+    def test_split_re_is_injected(self):
+        """★ 内核不预设中文分隔符：换一个 split_re，结果就变。"""
+        g_no_split = LetterSetGrader(split_re=re.compile(r"(?!)"))   # 永不匹配
+        raw = "B；思路：XBARR"
+        self.assertEqual(self.g.judge(raw, "B"), "correct")
+        self.assertEqual(g_no_split.judge(raw, "B"), "wrong",
+                         "不截断时 A/B 被抓出 → 证明分隔符是注入的，非内核写死")
+
+    def test_alphabet_is_injected(self):
+        """★ 内核不预设只有 A–H：字母范围也可注入。"""
+        narrow = LetterSetGrader(split_re=SPLIT_BBPREP, alphabet_re="A-Da-d")
+        self.assertEqual(self.g.letters("E"), "E")
+        self.assertEqual(narrow.letters("E"), "",
+                         "窄表下 E 不合法 → 证明字母范围是注入的")
+
+
+class TestTrueFalseGrader(unittest.TestCase):
+    """判断题。只取第一个判断词（附注不得干扰）。"""
+
+    def setUp(self):
+        self.g = TrueFalseGrader(split_re=SPLIT_BBPREP,
+                                 true_tokens=TF_TRUE, false_tokens=TF_FALSE)
+
+    def test_basic(self):
+        self.assertEqual(self.g.judge("对", "对"), "correct")
+        self.assertEqual(self.g.judge("错", "对"), "wrong")
+        self.assertEqual(self.g.judge("√", "对"), "correct")
+        self.assertEqual(self.g.judge("×", "对"), "wrong")
+
+    def test_first_token_wins_over_annotation(self):
+        """『对，但……思路…』判对 —— 只认第一个判断词。"""
+        self.assertEqual(self.g.judge("对，但我不确定思路对不对", "对"), "correct")
+        self.assertEqual(self.g.judge("错；思路：我猜是错的", "错"), "correct")
+
+    def test_offvocabulary_is_wrong(self):
+        self.assertEqual(self.g.judge("不太清楚", "对"), "wrong")
+        self.assertEqual(self.g.judge("", "对"), "wrong")
+
+    def test_tokens_are_injected(self):
+        """★ 真值词表是注入的：换成英文词表，中文『对』即失配。"""
+        g_en = TrueFalseGrader(split_re=SPLIT_BBPREP,
+                               true_tokens={"true", "t"}, false_tokens={"false", "f"})
+        self.assertEqual(self.g.judge("对", "对"), "correct")
+        self.assertEqual(g_en.judge("对", "对"), "wrong",
+                         "英文词表下『对』不在表内 → 证明词表是注入的")
+
+
+class TestNumericGrader(unittest.TestCase):
+    """计算题：数值 + 绝对容差（含逐题 tol）。"""
+
+    def setUp(self):
+        self.g = NumericGrader(num_re=NUM_RE)
+
+    def test_within_tolerance(self):
+        self.assertEqual(self.g.judge("0.05", "0.05"), "correct")
+        self.assertEqual(self.g.judge("0.055", "0.05"), "correct")   # 容差 0.01
+        self.assertEqual(self.g.judge("0.07", "0.05"), "wrong")
+
+    def test_thousands_separator_stripped(self):
+        self.assertEqual(self.g.judge("1,234.5", "1234.5"), "correct")
+
+    def test_per_item_tolerance(self):
+        self.assertEqual(self.g.judge("0.06", {"answer": "0.05", "tol": 0.001}), "wrong")
+        self.assertEqual(self.g.judge("0.0505", {"answer": "0.05", "tol": 0.001}), "correct")
+
+    def test_tol_falsy_falls_back_to_default(self):
+        """⚠️ 真源 `float(x or 0.01)`：tol 为 falsy（`0` / `""`）时**回退默认**，
+        不当成"零容差"。逐字等价，不"顺手修"。"""
+        self.assertEqual(self.g.judge("0.06", {"answer": "0.05", "tol": 0}), "correct")
+        self.assertEqual(self.g.judge("0.06", {"answer": "0.05", "tol": ""}), "correct")
+
+    def test_bad_key_is_wrong(self):
+        self.assertEqual(self.g.judge("1", "无数字"), "wrong")
+
+    def test_reasoning_numbers_also_compared(self):
+        """⚠️ **真源既有语义，保持等价、不"顺手修"**：calc **不截断思路**，
+        思路里出现的数字也参与比对。故「答案写错但思路里恰好算了正确值」会判对。
+        """
+        raw = "0.07；思路：我先算到 0.05 又改了口径"
+        self.assertEqual(self.g.judge(raw, "0.05"), "correct",
+                         "真源不截断 → 思路里的 0.05 也算命中（既有语义）")
+
+
+class TestKeywordGrader(unittest.TestCase):
+    """要点题：关键词全含。"""
+
+    def setUp(self):
+        self.g = KeywordGrader()
+
+    def test_all_keywords_required(self):
+        self.assertEqual(self.g.judge("先做 MSA 再评估过程能力", "MSA|过程能力"), "correct")
+        self.assertEqual(self.g.judge("只做了 MSA", "MSA|过程能力"), "wrong")
+
+    def test_whitespace_insensitive(self):
+        self.assertEqual(self.g.judge("先做 M S A", "MSA"), "correct")
+
+    def test_empty_keywords_is_wrong(self):
+        self.assertEqual(self.g.judge("随便写点什么", ""), "wrong")
+
+    def test_sep_is_injected(self):
+        """★ 关键词分隔符是注入的。"""
+        g_comma = KeywordGrader(sep_re=r",")
+        self.assertEqual(self.g.judge("甲乙", "甲|乙"), "correct")   # 两个关键词都命中
+        self.assertEqual(g_comma.judge("甲乙", "甲|乙"), "wrong",
+                         "逗号分隔下『甲|乙』是一个整体词 → 证明分隔符注入")
 
 
 class TestScheduleContract(unittest.TestCase):
