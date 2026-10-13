@@ -1,7 +1,7 @@
 ---
 kind: kernel
 domain: learning
-maturity: planned
+maturity: implemented
 version: 0.4.0
 ---
 
@@ -281,7 +281,12 @@ AI-Kongzi `modules/错题整理系统/` 已建此闭环，可作参考实现；b
 | ③ | **有版本载体** | 代码有 `__version__` 或等价常量 |
 
 > **门槛本身就是信噪比过滤器** —— 注册表一旦退化成"所有项目清单"，检索结果全是噪音。
-> **门槛①按事实记，不按计划记。**（LESSON-OS 当前记 `planned` 正因此）
+> **门槛①按事实记，不按计划记。**
+> **变更记录**：LESSON-OS 原记 `planned`（"尚无真实消费方"）。**2026-10-13 起改记
+> `implemented`** —— bb-prep 已通过 `vendor/LESSON-OS` submodule 钉 `0.4.0` 真实消费
+> （`practice.pick_items` + `bbcore.apply_result` 双委托，出卷逐字节验收通过），
+> 消费方 **1 个（< 2）**，正落在 `implemented` 档。待 vocab-app / AI-Kongzi 接入后
+> 才够 `adopted`（≥2 项目）。
 
 ### 11.2 标签 Schema（写在各库 frontmatter）
 

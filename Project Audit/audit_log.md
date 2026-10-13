@@ -200,3 +200,53 @@ R1 的 1 处 🟡 待修项（LADDER 非逐字节相同）**已于本轮闭环**
 | 2026-10-13 | `0.3.0` 定性为**行为变更**（非纯 MINOR 增量） | 同 rng 下输出变化 → 消费方必须重跑验收（G3） |
 | 2026-10-13 | `github` 远端**只配置不推送** | LIBGOV 文档含内部项目名与本地路径，可见性须 Owner 决定 |
 | 2026-10-13 | 补位分支差异**登记不擅改** | 属语义级选择，且只有 Owner 能定 A3 取哪一侧 |
+
+---
+
+## 2026-10-13 · P1-A2 + P1-A3 落地（内核 → `0.4.0`；bb-prep 成为**真实消费方**）
+
+> **意义**：这是 **B-1「无真实消费方」首次解除** —— 分发闭环的「⑥消费」环节
+> 第一次真实跑通（在此之前整条闭环是"纸面成立"）。
+
+### 1. P1-A2 —— 实装 `vault.write_front`（内核 `0.3.0 → 0.4.0`）
+
+| 项 | 内容 |
+|---|---|
+| 改动 | `learn_engine/vault.py::write_front`：占位（`NotImplementedError`）→ **实装** |
+| 真源 | bb-prep `src/bbcore.py:write_front`（逐行核对，逻辑同源）—— **只改已存在的键 / 新键追加末尾 / 正文一字不动 / 按键名定位 / 强制 LF** |
+| 断言 | golden-set 16 → **25 项**（新增 9 项：正文零变化、仅列出的键变、LF 归一（含 CRLF 源）、新键追加与顺序、幂等、值写法、异常路径） |
+| 基线 | `golden_v0.4.0.json` 与 `golden_v0.3.0.json` **逐字节一致**（sha256 `fde8b715…`）→ 证 A2 未改变选题行为 |
+| ⚠️ 唯一差异 | 缺 frontmatter 抛 `ValueError`（库语义）vs 真源 `SystemExit`（脚本语义）；异常路径 |
+
+### 2. P1-A3 —— bb-prep 排期逻辑改为 `import learn_engine`（取裁决 ②）
+
+| 项 | 内容 |
+|---|---|
+| 依赖载体 | `vendor/LESSON-OS` submodule `620a334`(0.1.0) → **`1b37ed0`(0.4.0)**；双远端(ecs/github)均已含该 commit |
+| 落地①（阶梯） | `bbcore.apply_result` → 委托 `learn_engine.scheduler.apply_result`（`LADDER` 显式注入，ADR-0001） |
+| 落地②（选题） | `practice.pick_items` → 委托 `learn_engine.picker.WeightedPicker`（题库/权重/历史计数/真题谓词/阶梯**全部显式注入**） |
+| 裁决②落地 | 内核**一行未改**；补位仍留 `practice.main()`（泄漏剔除后的补足） |
+| **验收（主判据）** | 固定 `--date 2026-10-14 --seed 20261013`，改前/改后 **sheet sha256 `d92b0fbb…`**、**key sha256 `df9d4426…`** —— **逐字节相同** |
+| 附加验收 | `apply_result` 等价：合成 84 组 + 真实 60 条目 × correct∈{T,F} = **204 组，0 差异**（返回值 + 写盘字节） |
+| 点火验证 | `tests/selftest.py` **全链路通过**（出卷/防泄漏/半答跳过/全答结算/幂等/阶梯/周报/题库一致性/九域权重/图表判据） |
+
+#### 附带修复（A3 过程中发现；**均非本轮引入**）
+
+| 项 | 问题 | 处置 |
+|---|---|---|
+| 🔴 `bbcore.rel_fig` | 用 `Path(p).resolve()` —— **依赖进程 CWD**；selftest 临时副本(CWD≠ROOT)下 resolve 到真实路径 → `.relative_to(tmp)` 抛 `ValueError`，**selftest 长期红** | 改 `(ROOT / p).resolve()`（配图字段语义本就是「相对项目根」）。**11 条路径逐字等价**（CWD=ROOT 时与旧写法完全相同），出卷复验仍逐字节相同 |
+| `tests/selftest.py` | 只拷 `src/` + `03-题库/`；内核委托后临时副本无 `vendor/` → `ImportError` | copytree 增 `vendor/`（忽略 `.git` / `__pycache__`） |
+
+### 3. 顺带修正：`maturity: planned → implemented`
+
+bb-prep 已成为 1 个真实消费方 → 按 PLAYBOOK §11.2 四档判据（`implemented` = 自实现完整、
+测试通过，消费方 < 2）。`adopted` 须 ≥2 项目，待 vocab-app / AI-Kongzi 接入。
+
+### 决策链追加
+
+| 日期 | 决策 | 依据 |
+|------|------|------|
+| 2026-10-13 | **A3 补位分支取 ②**（内核保留现状，bb-prep 不调用内核补位） | 补位本质是**项目策略**（真源自己的补位也写在 `main()`）；池充足时差异不触发 |
+| 2026-10-13 | A2 异常语义取 `ValueError`（非真源 `SystemExit`） | 库函数不应 `SystemExit`；异常路径，正常调用不触发 |
+| 2026-10-13 | submodule 升级前**逐文件列未提交改动 + 双备份 + bundle 验证** | 10-11 事故铁律；实测 submodule 内 3 处「改动」经 `git diff` 证明为**纯 CRLF 噪声** |
+| 2026-10-13 | 修 `rel_fig` / selftest **不视为越界** | 不修则 A3 的点火验证无法执行；且改动对真实运行**逐字等价** |
