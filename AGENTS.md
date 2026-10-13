@@ -16,11 +16,12 @@ LESSON-OS 是 bb-prep / vocab-app / AI-Kongzi **共享的学习内核**：把
 **不做**：不做具体 App（题面 / 答案形态 / 领域权重留在各项目）；
 不做框架、服务、UI；**不引入 FSRS**（留可插拔接口，P2 候选）。
 
-**当前状态**：`implemented`（2026-10-13 起）—— 骨架完整、测试通过，
-**已有 1 个真实消费方**（bb-prep 经 `vendor/LESSON-OS` submodule 接入），
-未达入库门槛①的 **≥2 项目**。
+**当前状态**：`adopted`（2026-10-13 起）—— 骨架完整、测试通过，
+**已有 2 个真实消费方**（bb-prep 与 vocab-app，均经 `vendor/LESSON-OS` submodule
+接入），**达到入库门槛①（≥2 项目）**。
 P1-A（排期）/ P1-B（判分）**已完成**，三处占位**全部实装**：
 `vault.write_front`（0.4.0）/ `grader` adapter（0.5.0）/ `picker` adapter（0.3.0）。
+P2 已启动：vocab-app 接入（判分/排期/日期解析四处委托，0 差异验收）。
 版本变更史见 `CHANGELOG.md`。
 
 ---

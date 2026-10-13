@@ -1,7 +1,7 @@
 ---
 kind: kernel
 domain: learning
-maturity: implemented
+maturity: adopted
 version: 0.5.0
 ---
 
@@ -282,12 +282,19 @@ AI-Kongzi `modules/错题整理系统/` 已建此闭环，可作参考实现；b
 
 > **门槛本身就是信噪比过滤器** —— 注册表一旦退化成"所有项目清单"，检索结果全是噪音。
 > **门槛①按事实记，不按计划记。**
-> **变更记录**：LESSON-OS 原记 `planned`（"尚无真实消费方"）。**2026-10-13 起改记
-> `implemented`** —— bb-prep 已通过 `vendor/LESSON-OS` submodule 钉 `0.5.0` 真实消费
+> **变更记录**：
+> LESSON-OS 原记 `planned`（"尚无真实消费方"）。**2026-10-13 起改记 `implemented`**
+> —— bb-prep 已通过 `vendor/LESSON-OS` submodule 钉 `0.5.0` 真实消费
 > （`practice.pick_items` + `bbcore.apply_result` + **`judge` 判分** 三处委托，
-> 出卷逐字节验收 + 88 条作答 0 差异），
-> 消费方 **1 个（< 2）**，正落在 `implemented` 档。待 vocab-app / AI-Kongzi 接入后
-> 才够 `adopted`（≥2 项目）。
+> 出卷逐字节验收 + 88 条作答 0 差异）。
+> **同日再升 `adopted`** —— vocab-app 接入（submodule 同钉 `0.5.0`）：
+> `review.judge` → `ExactMatchGrader`、`next_schedule` / `apply_result` →
+> `scheduler`（LADDER 显式注入）、`as_date` → `vault.as_date` 四处委托，
+> 1162 项全电池 + 端到端结算 0 差异；`is_due` / `parse_front` / `write_front` /
+> `pick_words` 保留本地（边界差异 / 类型强转 / SystemExit 语义 /
+> vocab-app 侧选词算法决策 —— 其 docs/adr.md 编号 **0010**，属 vocab-app
+> **自己的** ADR 编号空间，与本仓编号互不相干，引用时勿省略仓名）。
+> 消费方 **2 个（≥2）** → 门槛①达成，正落在 `adopted` 档。
 
 ### 11.2 标签 Schema（写在各库 frontmatter）
 
