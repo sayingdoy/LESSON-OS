@@ -45,10 +45,21 @@
       （不把 `0` 当零容差）；calc **不截断思路**（思路里的数字也参与比对）——
       两处都是真源既有语义，**保持等价、不"顺手修"**。
     - golden-set 新增 21 项（4 类判决 + 每类一条"换注入 → 结果变"的参数化证明），
-      **共 46 项**。
+      **共 47 项**（commit message 原写 46，实测 47 —— 勘误同步全仓）。
     - ⚠️ 纯新增能力：既有 `ExactMatchGrader` 与选题/排期行为**完全未变**。
+  0.5.1（2026-10-13）PATCH 修 `is_due` 边界崩溃：
+    - `scheduler.is_due` 对非 str 非 date 的 due（int/bool，来自数值强转型
+      frontmatter 的脏数据）此前直接 `d <= ref` 抛 **TypeError**；现按
+      「不可解析 → 到期」处理，对齐两消费方本地实现（经 as_date 归一）语义。
+    - **零调用方**（两消费方均保留本地 is_due）→ 零回归；签名不变、既有路径
+     行为不变（None / str / date 三分支原样）。
+    - golden-set 新增 14 例 `is_due` 边界断言（10 例 dict 形态 + 审计后补
+      4 例 Item 属性形态），**共 61 项**；golden 输出（picker 场景）
+      **逐字节不变**（基线 `golden_v0.5.1.json` 与 0.5.0 等价）。
+    - 审计轮次：`Project Audit/Archive/v0.5.1_is_due边界修复_R1_方案_tbd`。
+    - `picker._is_due` 同形状问题**不在本版范围** —— 归技术债 B6 一并收敛。
 """
-__version__ = "0.5.0"
+__version__ = "0.5.1"
 
 from .model import Item, DEFAULT_LADDER, MASTER_STAGE, STATES, POOL_NEW
 from .scheduler import is_due, next_schedule, apply_result

@@ -3,7 +3,7 @@
 > 给在这个仓库里干活的 agent。**这一屏是全部必须立刻知道的东西**；
 > 判据全文在 `PLAYBOOK.md`（领域 SSOT），本文件**只放指针，不复刻**。
 >
-> 建立 2026-10-10 | Owner: Jason | 版本 0.5.0
+> 建立 2026-10-10 | Owner: Jason | 版本 0.5.1
 
 ---
 
@@ -51,7 +51,7 @@ learn_engine/          ← 内核（零外部依赖 Python 包）
   vault.py             ← parse_front / as_date ✅ ；write_front ✅ 已实装（0.4.0）
   grader.py            ← Grader 接口 + 4 个判分原语 ✅（0.5.0，策略全注入）
   picker.py            ← Picker 接口 + WeightedPicker ✅（0.3.0 贪心 + 温和上限）
-  tests/               ← golden-set（纯 stdlib unittest，**47 项**）—— P1 建立
+  tests/               ← golden-set（纯 stdlib unittest，**61 项**）—— P1 建立
 PLAYBOOK.md            ← 领域 SSOT（schema / API 契约 / 触发协议 / 差异清单）
 tutor/                 ← 提示/审美库（教学契约 SSOT；**引用或拷贝，不做常驻技能**）
 CHANGELOG.md           ← 内核版本变更记录（谁在何时、为何 bump）
@@ -76,7 +76,7 @@ Project Audit/         ← R1 方案与审计归档
 
 ## 5. 版本与发布
 
-- 版本载体：`learn_engine/__init__.py` 的 `__version__`（当前 `0.5.0`）
+- 版本载体：`learn_engine/__init__.py` 的 `__version__`（当前 `0.5.1`）
 - 变更记录：`CHANGELOG.md`（**bump 版本必须同步补一条**，否则生成器 / 消费方对不上）
 - 语义：PATCH=改 bug 签名不变；MINOR=加带默认值参数 / 新导出符号；
   **MAJOR=改签名 / 改默认行为 / 改 frontmatter 语义 / 改阈值**

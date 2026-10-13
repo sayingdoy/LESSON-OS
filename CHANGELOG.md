@@ -17,6 +17,30 @@
 
 ---
 
+## [0.5.1] — 2026-10-13 · PATCH · `is_due` 边界崩溃修复
+
+**PATCH**（改 bug、签名不变）｜ 审计轮次文件族：
+`Project Audit/Archive/v0.5.1_is_due边界修复_R1_方案_tbd` +
+`..._R1_审计_tbA_auditor` + `..._R1_终版_OK`（verdict 🟡 有条件通过，
+6 项处置结论见终版）
+
+- **问题**：`scheduler.is_due` 对非 str 非 None 的 due 值（int/bool，来自数值强转
+  型 frontmatter 解析器的脏数据，如 `due: 0`）直接 `d <= ref` → **TypeError**。
+- **修法**：增加第三条输入路 —— 不可解析值按「到期」处理（`return True`），
+  对齐两消费方本地实现「经 `as_date` 归一」的真源语义；不引 `vault`
+  （避免模块耦合）、不改签名、既有三分支（None/str/date）行为原样。
+- **回归风险 ≈ 0**：内核 `is_due` **零调用方**（bb-prep / vocab-app 均保留本地
+  `is_due`，grep 实证）→ 无消费方受影响；**消费方无需联动升级**。
+- **测试**：golden-set 新增 14 例 `is_due` 边界断言（10 例 dict 形态 + 4 例
+  Item 属性形态，后者为审计 R1 指出零覆盖后补）→ **47 → 61 项**；picker 场景
+  golden 输出**逐字节不变**（`golden_v0.5.1.json` 与 0.5.0 基线等价，随版本分发）。
+- **不在本版范围**：`picker._is_due` 同形状问题 —— 归技术债 **B6**（四份日期
+  解析收敛）一并处理，不扩大本 PATCH 爆炸面。
+- **已知边界复述**：消费方**重新委托** `is_due` 是各自 P2+ 决策，本版只保证
+  内核侧可安全委托。
+
+---
+
 ## [0.5.0] — 2026-10-13 · `948b419`
 
 **P1-B1 判分原语（bb-prep 风格 adapter）** ｜ MINOR

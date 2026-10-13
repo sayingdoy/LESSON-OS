@@ -26,8 +26,8 @@ import unittest
 from pathlib import Path
 
 from ..picker import WeightedPicker
-from ..model import POOL_NEW, DEFAULT_LADDER
-from ..scheduler import next_schedule
+from ..model import POOL_NEW, DEFAULT_LADDER, Item
+from ..scheduler import is_due, next_schedule
 from ..grader import (ExactMatchGrader, LetterSetGrader, TrueFalseGrader,
                       NumericGrader, KeywordGrader)
 from ..vault import parse_front, write_front
@@ -553,6 +553,66 @@ class TestVaultWriteFront(unittest.TestCase):
         bad.write_text("没有 frontmatter", encoding="utf-8")
         with self.assertRaises(ValueError):
             write_front(bad, {"stage": 1})
+
+
+# ── 0.5.1：is_due 边界回归（PATCH，非 str/date 输入不得崩）──────────────────
+class TestIsDueBoundary(unittest.TestCase):
+    """`scheduler.is_due` 全边界回归（v0.5.1，Project Audit R1 已批）。
+
+    判据 = **与两消费方本地 is_due 逐案一致**（bb-prep `bbcore.py:215`、
+    vocab-app `review.py`，均经 as_date 归一：不可解析 → 到期）。
+    dict 与 Item 两种输入形态都要覆盖（内核签名两者都吃）。
+    """
+
+    REF = dt.date(2026, 10, 13)
+
+    def test_none_due(self):
+        self.assertTrue(is_due({"due": None}, self.REF))
+
+    def test_empty_string_due(self):
+        self.assertTrue(is_due({"due": ""}, self.REF))
+
+    def test_int_zero_due_not_crash(self):
+        # 0.5.1 修复对象：此前 TypeError
+        self.assertTrue(is_due({"due": 0}, self.REF))
+
+    def test_bool_false_due_not_crash(self):
+        self.assertTrue(is_due({"due": False}, self.REF))
+
+    def test_int_nonzero_due_not_crash(self):
+        self.assertTrue(is_due({"due": 1}, self.REF))
+
+    def test_bad_string_due(self):
+        self.assertTrue(is_due({"due": "garbage"}, self.REF))
+
+    def test_past_string_due_is_due(self):
+        # 语义核对：is_due = 「现在该复习了吗」—— 过去的到期日 = 已到期 = True
+        self.assertTrue(is_due({"due": "2026-01-01"}, self.REF))
+
+    def test_future_string_due_not_due(self):
+        self.assertFalse(is_due({"due": "2099-01-01"}, self.REF))
+
+    def test_past_date_object_is_due(self):
+        self.assertTrue(is_due({"due": dt.date(2026, 1, 1)}, self.REF))
+
+    def test_future_date_object_not_due(self):
+        self.assertFalse(is_due({"due": dt.date(2099, 1, 1)}, self.REF))
+
+    # ── Item（dataclass）形态：覆盖 `it.due` 属性路径（hasattr 分支）─────────
+    # 审计 R1 指出原 10 例全为 dict、Item 路径零覆盖（docstring 自述不符）——
+    # 此处补齐，使「dict 与 Item 两种输入形态都要覆盖」成为事实。
+    def test_item_past_date_is_due(self):
+        self.assertTrue(is_due(Item(id="t", due=dt.date(2026, 1, 1)), self.REF))
+
+    def test_item_future_date_not_due(self):
+        self.assertFalse(is_due(Item(id="t", due=dt.date(2099, 1, 1)), self.REF))
+
+    def test_item_none_due(self):
+        self.assertTrue(is_due(Item(id="t", due=None), self.REF))
+
+    def test_item_int_due_not_crash(self):
+        # 崩溃家族经属性路径再验一次（0.5.1 修复对象）
+        self.assertTrue(is_due(Item(id="t", due=0), self.REF))
 
 
 def main() -> None:

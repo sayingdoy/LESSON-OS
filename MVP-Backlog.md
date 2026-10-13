@@ -139,8 +139,8 @@
 
 - ✅ **vocab-app 接入**（`a7d7848`）：submodule 钉 `948b419`＝0.5.0；`review.py`
   四处委托（判分/排期/结算计算/日期解析）；**1162 项 + 端到端 0 差异**；
-  保留本地四个（is_due 边界差异 / parse_front 类型强转 / write_front 语义 /
-  pick_words 算法）逐条记录于 vocab-app ADR-0012。
+  保留本地四个（is_due 差异**已消**于 0.5.1 / parse_front 类型强转 /
+  write_front 语义 / pick_words 算法）逐条记录于 vocab-app ADR-0012。
   → 消费方达 2 个，`maturity: implemented → adopted`（ADR-0009 同期立档）。
 - ⛔ **AI-Kongzi 映射分析结论＝暂不强行接入**（`0e1c16b`，仅指针升级
   v0.1.0→v0.5.0 保鲜，零运行时影响）：

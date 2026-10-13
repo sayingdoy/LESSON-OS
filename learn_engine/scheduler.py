@@ -11,7 +11,13 @@ from .model import DEFAULT_LADDER, MASTER_STAGE
 
 
 def is_due(it, ref: dt.date) -> bool:
-    """到期判定（与 bb-prep/vocab-app 同名同形）。due 为空或 <= ref 即到期。"""
+    """到期判定（与 bb-prep/vocab-app 同名同形）。due 为空或 <= ref 即到期。
+
+    0.5.1（2026-10-13）：补第三条输入路 —— 非 str 非 date 的值（int/bool 等，
+    来自数值强转型 frontmatter 解析器的脏数据）按「不可解析 → 到期」处理，
+    对齐两消费方本地实现（经 `as_date` 归一后返回 True）的真源语义。
+    此前该输入直接 `d <= ref` 抛 TypeError（ADR：Project Audit v0.5.1 R1）。
+    """
     d = it.due if hasattr(it, "due") else it.get("due")
     if d is None:
         return True
@@ -20,6 +26,8 @@ def is_due(it, ref: dt.date) -> bool:
             d = dt.date.fromisoformat(d[:10])
         except ValueError:
             return True
+    elif not isinstance(d, dt.date):
+        return True   # int/bool 等不可解析值 → 到期（与两消费方本地语义一致）
     return d <= ref
 
 

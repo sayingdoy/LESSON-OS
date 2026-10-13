@@ -2,7 +2,7 @@
 kind: kernel
 domain: learning
 maturity: adopted
-version: 0.5.0
+version: 0.5.1
 ---
 
 # LESSON-OS · 跨项目共享学习内核手册（PLAYBOOK）
@@ -297,8 +297,8 @@ load_key(note) / load_judged(note) / save_judged(note, nos)
 > `review.judge` → `ExactMatchGrader`、`next_schedule` / `apply_result` →
 > `scheduler`（LADDER 显式注入）、`as_date` → `vault.as_date` 四处委托，
 > 1162 项全电池 + 端到端结算 0 差异；`is_due` / `parse_front` / `write_front` /
-> `pick_words` 保留本地（边界差异 / 类型强转 / SystemExit 语义 /
-> vocab-app 侧选词算法决策 —— 其 docs/adr.md 编号 **0010**，属 vocab-app
+> `pick_words` 保留本地（is_due 差异**已消**于 0.5.1 / 类型强转 / SystemExit
+> 语义 / vocab-app 侧选词算法决策 —— 其 docs/adr.md 编号 **0010**，属 vocab-app
 > **自己的** ADR 编号空间，与本仓编号互不相干，引用时勿省略仓名）。
 > 消费方 **2 个（≥2）** → 门槛①达成，正落在 `adopted` 档。
 
@@ -345,6 +345,10 @@ version: 0.1.0
 > ① `learn_engine/__init__.py` 的 `__version__`（**唯一真源**）；
 > ② `PLAYBOOK.md` frontmatter `version`（注册表 `build_registry.py` 读它）；
 > ③ `CHANGELOG.md` 补一条（谁在何时、为何 bump）。
+> **第 4 个接触点（2026-10-13 0.5.1 实测补入）**：`AGENTS.md` 头部散文
+> 「版本 X.Y.Z」—— 它**不是版本载体**，但受 B7 机械检查（散文警告级），
+> bump 时不同步必产 ⚠️。0.5.1 实战：bump 后 `--check` 当即抓到
+> `AGENTS.md:6` 停在 0.5.0（C3 事故形状），当日修复。
 > 生成器带**版本漂移检测**（frontmatter ≠ `__version__` 时**只报不改**）——
 > 2026-10-13 实际踩过：内核已 0.3.0，PLAYBOOK 仍写 0.2.0，注册表**静默记旧值**。
 

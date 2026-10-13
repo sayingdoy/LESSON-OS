@@ -1,0 +1,124 @@
+{
+  "seed": 20261010,
+  "today": "2026-10-11",
+  "main": {
+    "review": [
+      "g-due-10",
+      "g-due-11",
+      "g-due-09",
+      "g-due-04",
+      "g-due-05",
+      "g-due-06",
+      "g-due-08",
+      "g-due-03",
+      "g-due-07",
+      "g-due-02"
+    ],
+    "fresh": [
+      "g-new-19",
+      "g-new-04",
+      "g-new-14",
+      "g-new-09",
+      "g-new-05",
+      "g-new-10",
+      "g-new-11",
+      "g-new-13",
+      "g-new-08",
+      "g-new-03",
+      "g-new-18",
+      "g-new-07"
+    ],
+    "review_states": [
+      "learning",
+      "learning",
+      "lapsed",
+      "learning",
+      "learning",
+      "lapsed",
+      "learning",
+      "lapsed",
+      "learning",
+      "learning"
+    ]
+  },
+  "no_weight": {
+    "review": [
+      "g-due-10",
+      "g-due-11",
+      "g-due-09",
+      "g-due-07",
+      "g-due-05",
+      "g-due-08",
+      "g-due-04",
+      "g-due-02",
+      "g-due-03",
+      "g-due-06"
+    ],
+    "fresh": [
+      "g-new-05",
+      "g-new-11",
+      "g-new-07",
+      "g-new-16",
+      "g-new-19",
+      "g-new-08",
+      "g-new-13",
+      "g-new-17",
+      "g-new-10",
+      "g-new-04",
+      "g-new-14",
+      "g-new-18"
+    ],
+    "review_states": [
+      "learning",
+      "learning",
+      "lapsed",
+      "learning",
+      "learning",
+      "learning",
+      "learning",
+      "learning",
+      "lapsed",
+      "lapsed"
+    ]
+  },
+  "gap0": {
+    "review": [
+      "g-due-10",
+      "g-due-11",
+      "g-due-09",
+      "g-due-04",
+      "g-due-00",
+      "g-due-05",
+      "g-due-06",
+      "g-due-01",
+      "g-due-08",
+      "g-due-03"
+    ],
+    "fresh": [
+      "g-new-19",
+      "g-new-04",
+      "g-new-14",
+      "g-new-09",
+      "g-new-05",
+      "g-new-08",
+      "g-new-13",
+      "g-new-03",
+      "g-new-18",
+      "g-new-02",
+      "g-new-17",
+      "g-new-07"
+    ],
+    "review_states": [
+      "learning",
+      "learning",
+      "lapsed",
+      "learning",
+      "lapsed",
+      "learning",
+      "lapsed",
+      "learning",
+      "learning",
+      "lapsed"
+    ]
+  }
+}
