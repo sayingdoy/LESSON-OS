@@ -2,12 +2,12 @@
 kind: kernel
 domain: learning
 maturity: planned
-version: 0.3.0
+version: 0.4.0
 ---
 
 # LESSON-OS · 跨项目共享学习内核手册（PLAYBOOK）
 
-> 版本 0.3 | 建立 2026-10-10 | Owner: Jason
+> 版本 0.4 | 建立 2026-10-10 | Owner: Jason
 > 本文件是 **bb-prep / vocab-app / AI-Kongzi（LearningOS）** 三个学习类项目的
 > **单一真源（SSOT）**：沉淀"学习 + 复习 + 错题复盘"循环的共性经验与优化点，
 > 让每次开发都能复用、复用滚雪球，且核心更新不误伤其他项目、交付可整包脱离代码库。

@@ -20,13 +20,15 @@ import datetime as dt
 import json
 import random
 import sys
+import tempfile
 import unittest
+from pathlib import Path
 
 from ..picker import WeightedPicker
 from ..model import POOL_NEW, DEFAULT_LADDER
 from ..scheduler import next_schedule
 from ..grader import ExactMatchGrader
-from ..vault import parse_front
+from ..vault import parse_front, write_front
 
 # ── 固定常量（ADR-0002：不得临场改）────────────────────────────────────────
 FIXED_SEED = 20261010
@@ -289,6 +291,109 @@ class TestFrontIOParse(unittest.TestCase):
 
     def test_no_front(self):
         self.assertEqual(parse_front("没有 frontmatter"), {})
+
+
+class TestVaultWriteFront(unittest.TestCase):
+    """A2：实装 `write_front` —— 只改已存在的键，正文一字不动。
+
+    真源：bb-prep `src/bbcore.py:write_front`。验收判据（MVP-Backlog P1-A）：
+    **改前 / 改后逐字节比对，正文零变化**。这里用固定样本把该判据钉成断言。
+    """
+
+    SAMPLE = ("---\n"
+              "id: x-01\n"
+              "stage: 2\n"
+              "state: learning\n"
+              "due: 2026-10-16\n"
+              "reviews: 2\n"
+              "correct: 2\n"
+              "wrong: 0\n"
+              "---\n"
+              "## 题干\n"
+              "\n"
+              "正文第一行\n"
+              "正文第二行\n")
+    BODY = "## 题干\n\n正文第一行\n正文第二行\n"
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp(prefix="lessonos_"))
+        self.addCleanup(lambda: __import__("shutil").rmtree(self.tmp, ignore_errors=True))
+        self.p = self.tmp / "x-01.md"
+        self.p.write_text(self.SAMPLE, encoding="utf-8", newline="\n")
+
+    # ── 核心判据：正文零变化 + 只改列出的键 ─────────────────────────────
+    def test_body_untouched_and_only_listed_keys_change(self):
+        write_front(self.p, {"stage": 3, "state": "review", "due": "2026-10-18",
+                             "reviews": 3, "correct": 3, "wrong": 0})
+        got = self.p.read_text(encoding="utf-8")
+        want = ("---\n"
+                "id: x-01\n"
+                "stage: 3\n"
+                "state: review\n"
+                "due: 2026-10-18\n"
+                "reviews: 3\n"
+                "correct: 3\n"
+                "wrong: 0\n"
+                "---\n") + self.BODY
+        self.assertEqual(got, want)
+        # 正文逐字节零变化（独立断言，便于失败定位）
+        self.assertEqual(got.split("---\n", 2)[2], self.BODY,
+                         "正文必须一字不动")
+
+    def test_unlisted_key_untouched(self):
+        """未列入 updates 的键（id）必须原样保留。"""
+        write_front(self.p, {"stage": 5})
+        self.assertIn("\nid: x-01\n", self.p.read_text(encoding="utf-8"))
+
+    # ── 行尾：强制 LF（仓库统一，见 .gitattributes）─────────────────────
+    def test_lf_forced_no_cr(self):
+        write_front(self.p, {"stage": 1})
+        raw = self.p.read_bytes()
+        self.assertNotIn(b"\r", raw, "不得写入 CR —— 仓库统一 LF")
+
+    def test_lf_forced_when_source_has_crlf(self):
+        """源文件是 CRLF 时，回写必须归一为 LF（否则每次写盘都产生假 diff）。"""
+        self.p.write_bytes(self.SAMPLE.replace("\n", "\r\n").encode("utf-8"))
+        write_front(self.p, {"stage": 4})
+        self.assertNotIn(b"\r", self.p.read_bytes())
+
+    # ── 新键：追加到末尾 ───────────────────────────────────────────────
+    def test_appends_missing_key_at_end(self):
+        write_front(self.p, {"note": "D5-测量/V.D.12-正态分布3σ法则"})
+        got = self.p.read_text(encoding="utf-8")
+        self.assertTrue(got.startswith(
+            "---\nid: x-01\nstage: 2\nstate: learning\ndue: 2026-10-16\n"
+            "reviews: 2\ncorrect: 2\nwrong: 0\n"
+            "note: D5-测量/V.D.12-正态分布3σ法则\n---\n"), got)
+        self.assertEqual(got.split("---\n", 2)[2], self.BODY)
+
+    def test_missing_key_order_follows_updates(self):
+        """多个新键按传入顺序追加（dict 保序）。"""
+        write_front(self.p, {"b_key": "2", "a_key": "1"})
+        tail = self.p.read_text(encoding="utf-8").split("wrong: 0\n", 1)[1]
+        self.assertEqual(tail, "b_key: 2\na_key: 1\n---\n" + self.BODY)
+
+    # ── 幂等：同参数重复调用不改变字节 ─────────────────────────────────
+    def test_idempotent(self):
+        upd = {"stage": 3, "state": "review"}
+        write_front(self.p, upd)
+        once = self.p.read_bytes()
+        write_front(self.p, upd)
+        self.assertEqual(once, self.p.read_bytes(), "重复写入必须幂等")
+
+    # ── 键值写法：与真源逐字一致 ───────────────────────────────────────
+    def test_value_format(self):
+        write_front(self.p, {"stage": 3, "reviews": 0})
+        got = self.p.read_text(encoding="utf-8")
+        self.assertIn("\nstage: 3\n", got)
+        self.assertIn("\nreviews: 0\n", got)
+
+    # ── 异常路径：缺 frontmatter ───────────────────────────────────────
+    def test_missing_frontmatter_raises(self):
+        bad = self.tmp / "bad.md"
+        bad.write_text("没有 frontmatter", encoding="utf-8")
+        with self.assertRaises(ValueError):
+            write_front(bad, {"stage": 1})
 
 
 def main() -> None:

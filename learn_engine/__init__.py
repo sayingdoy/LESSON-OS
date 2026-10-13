@@ -28,8 +28,15 @@
       消费方升级后必须重跑验收（G3），并对齐 golden 基线。
     - 已知剩余差异：池不足时的**补位分支**语义（内核按 state 路由回 review/fresh
       两档；真源一律并入 fresh）—— 待 A3 前裁决。
+  0.4.0（2026-10-13）P1-A2 实装 `vault.write_front`：
+    - 占位（`NotImplementedError`）→ 实装（真源 bb-prep `src/bbcore.py:write_front`）：
+      **只改已存在的键、新键追加末尾、正文一字不动、强制 LF 行尾**。
+    - golden-set 新增 9 项字节级断言（正文零变化 / 仅列出的键变 / LF 归一 /
+      新键追加 / 幂等 / 值写法 / 异常路径），**共 25 项**。
+    - **选题行为未变**：golden 输出与 0.3.0 逐字节相同（`golden_v0.4.0.json`
+      与 `golden_v0.3.0.json` 一致即证）。
 """
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 from .model import Item, DEFAULT_LADDER, MASTER_STAGE, STATES, POOL_NEW
 from .scheduler import is_due, next_schedule, apply_result
