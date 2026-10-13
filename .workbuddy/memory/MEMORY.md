@@ -6,6 +6,11 @@
 - **归档语义**：`Project Audit/` 根目录**只放进行中轮次**；已终版轮次全套移入 `Archive/`。
 - **ADR**：`ADR/` 目录，一决策一文件；`ADR-template.md` 是唯一模板（**禁止内联副本**）。
 - ADR 引用编号必须**有实体文件**（曾出现 0006/0008 无实体、0001 只作内联示例）。
+- 🔴 **ADR 编号是「跨项目共享空间」，不是本地序号** —— `0006`/`0008` 实际定于
+  2026-10-06/07（bb-prep 侧），10-11 才补档进本仓 → **编号沿用不重排**。
+  空洞号 `0005`/`0007`（全库零引用零实体）**保留、不回收**（回收会造成「同号异义」）。
+  新 ADR 取**当前最大号 + 1**（现 `0009`），索引在 `ADR/README.md`。
+- **`CHANGELOG.md`** = 内核 bump 的人读记录（0.1.0→0.5.0，含 BREAKING 标记 + 消费方对照表）。
 
 ## 🔴 血的教训（2026-10-11 事故，必须遵守）
 **`git filter-repo` 的强制 checkout 会静默覆盖未提交的工作区改动。**
@@ -25,7 +30,9 @@ bb-prep `src/practice.py` 2026-10-10 的全部改动（`--recent-gap` 去重 + �
 - **bb-prep 已接入**（首个真实消费方）：`vendor/LESSON-OS` 为 git submodule（钉 commit），
   入口在 `src/bbcore.py` 顶部（`_KERNEL_DIR` 按 `__file__` 解析、**不用 BB_ROOT**）。
   `practice.pick_items` → `picker.WeightedPicker`；`bbcore.apply_result` → `scheduler`。
+  **判分**（2026-10-13 P1-B3）：`bbcore.judge` → `grader` 四原语，**策略全注入**。
   → `maturity: implemented`（消费方 1 个 < 2）；**B-1「无真实消费方」已解除**。
+  **消费面已是 3 处**：选题 / 阶梯 / 判分。
 - **A3 补位分支裁决 ②**：内核按 `state` 路由回 review/fresh、真源一律并入 fresh ——
   **内核不改**，补位留 `practice.main()`（池充足时差异不触发）。
 - 🔴 **陷阱：任何路径换算函数不得依赖 CWD**（`Path(p).resolve()` 是错的；用 `(ROOT / p)`）。
@@ -38,3 +45,22 @@ bb-prep `src/practice.py` 2026-10-10 的全部改动（`--recent-gap` 去重 + �
 - 验收门槛必须**固定 rng 种子**（bb-prep 有 `--seed`），列为第 0 步。
 - 版本闸门载体 = git submodule（非 vendor），ADR-0003；MAJOR 须人工确认。
 - 内核边界：scheduler/vault/model 共享；grader/picker 走 adapter；FSRS 留接口不入核。
+
+## 版本管理（**bump 三处同步**，缺一即漂移）
+1. `learn_engine/__init__.py` 的 `__version__`（**唯一真源**，现 `0.5.0`）
+2. `PLAYBOOK.md` frontmatter `version`（注册表 `build_registry.py` 读它）
+3. `CHANGELOG.md` 补一条（谁在何时、为何 bump）
+
+> 实测踩过：内核已 0.3.0，PLAYBOOK 仍写 0.2.0 → 注册表**静默记旧值**。
+> 生成器已带漂移检测（frontmatter ≠ `__version__` 时**只报不改**，符合 G5）。
+
+## 🔴 教训（2026-10-13 新增）
+- **数字必须实测，不许凭印象**：0.5.0 的 golden-set 各方都写「46 项」，实跑 **47**。
+  `948b419` 的 commit message 就是错的。核实法：`grep -c "def test_"` +
+  `unittest` 实跑**双向对照**。各版本实测：0.2.0=13 / 0.3.0=16 / 0.4.0=25 / 0.5.0=47。
+- **生成器只扫 `PLAYBOOK.md`**（`DOC_CANDIDATES` 取第一个命中）→ `AGENTS.md` /
+  `README.md` 的**版本与状态引用无机械检查**，可静默落后 4 个版本（实况：
+  `AGENTS.md` 停在 `0.1.0` + `planned`，而它是 agent 的**执行宪法**→ 误判代价最高）。
+  技术债 **B7**：扩扫描范围，或立「版本只在 PLAYBOOK frontmatter 出现一次、
+  其余文档只链接不写值」的 SSOT 规则。**改内核后要人工复扫这三份文档。**
+- **历史快照文档（`HANDOFF.md`）不篡改历史** —— 加**时效声明**指向最新状态即可。
