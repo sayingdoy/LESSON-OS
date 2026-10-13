@@ -127,8 +127,14 @@ python ../LIBGOV/registry/build_registry.py --check   # 退出码见下方勘误
    > `AGENTS.md` / `README.md` / `PLAYBOOK.md`；彻底收敛需选项②
    > （版本只在 PLAYBOOK frontmatter 出现一次、其余只链接不写值）——
    > 建议留待下次内核 bump 时一并做，并可立 ADR-0009 记录分级判据。
-3. **P2** —— vocab-app / AI-Kongzi 接入 `learn_engine` → 门槛①达标（≥2）→
-   `maturity: implemented → adopted`；并沉淀 `tutor-prompt-library` 技能库。
+3. **P2** —— 🔄 **部分完成（2026-10-13 晚间）**：
+   - ✅ **vocab-app 已接入**（submodule 钉 0.5.0，四处委托，1162 项 + 端到端
+     0 差异）→ **门槛①已达标（消费方 2 个）→ `maturity: adopted`**。
+   - ⛔ **AI-Kongzi 映射分析结论＝暂不强行接入**：零等价委托面（人判题 /
+     topic 级 7 天复测 / frontmatter 契约不同），指针已升 0.5.0 保鲜，
+     待其 Sprint 2B 按内核契约设计时自然接入。分析全文见
+     `MVP-Backlog.md`「P2 进展」节。
+   - ⬜ `tutor-prompt-library` 技能库沉淀（未启动）。
 4. **待 Owner 复核** —— bb-prep `L15`（`II.A.1`，`judged: false`）**已开课未判**，
    当前**未计入**「已讲 = 14」。
 5. **次要** —— `Project AI Kongzi` 有 **9 项未提交**（既存，非本对话产生，未擅自处理）：
@@ -210,3 +216,12 @@ _本文件生成于 2026-10-13 17:48。_
   - 状态更新：B7 ✅ 已实装（LIBGOV `build_registry.py`，**本地 commit 未推送**，
     待 Owner 确认后 `sync_all.sh`）。
   - 未动：B6 / P2 / L15 / AI Kongzi 工作区（范围外或待确认）。
+
+- **2026-10-13 晚间（承接 agent，同会话续）**：用户批准「继续」→ P2 执行：
+  - vocab-app 接入内核 0.5.0（四处委托 + 1162 项/端到端 0 差异）→
+    maturity adopted；AI Kongzi 映射分析后**判定暂不接入**（零等价委托面，
+    纪律：不为凑数而委托），submodule 指针升至 0.5.0 保鲜；
+  - ADR-0009 已立（B7 分级判据）；MVP-Backlog「P2 进展」节记录全文；
+  - 全部 commit 已 `sync_all.sh` 推送双远端。
+  - 仍待 Owner：vocab-app AGENTS.md 更新（其宪法须 Jason 确认）、
+    tutor-prompt-library 技能库、L15 第 3 题、内核 is_due TypeError 候选。

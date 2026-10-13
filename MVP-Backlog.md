@@ -14,6 +14,7 @@
 | **R1 契约修正（裁决 B1–B5 / A3余 / C1余）** | ✅ **完成 2026-10-11**（内核 → `0.2.0`） |
 | **P1 抽代码（本 backlog）** | ✅ **完成 2026-10-13**：A1 ✅ / A2 ✅ / A3 ✅ / A4 ✅ / B1 ✅ / B2 ✅ / B3 ✅ |
 | **P1-C 收尾（版本锚点）** | ✅ **完成 2026-10-13**：C1 ✅ / C2 ✅ / C3 ✅ |
+| **P2 接入 + 技能库** | 🔄 **进行中 2026-10-13**：vocab-app ✅ 已接入（maturity→adopted）；AI-Kongzi 映射分析＝暂不接入（指针已保鲜）；tutor-prompt-library 待启动 |
 | **技术债 B7（版本引用机械检查）** | ✅ **完成 2026-10-13**（LIBGOV 侧实装，见下方清单） |
 | 技术债 B6（四份日期解析收敛） | ⬜ 待启动 |
 | P2 接入 + 技能库 | ⬜ 待启动 |
@@ -134,12 +135,27 @@
 
 ---
 
-## P2 展望（本 backlog 不含，仅登记）
+## P2 进展（2026-10-13 启动）
 
-- vocab-app / AI-Kongzi 接入 `learn_engine`（届时 `maturity: implemented → adopted`）
-- `tutor-prompt-library` 技能库 + CI golden-set
-- FSRS 可选后端（同 `next_schedule` 接口替换）
-- `standard-lib-search` 独立 skill 串进 VCP 步骤 1
+- ✅ **vocab-app 接入**（`a7d7848`）：submodule 钉 `948b419`＝0.5.0；`review.py`
+  四处委托（判分/排期/结算计算/日期解析）；**1162 项 + 端到端 0 差异**；
+  保留本地四个（is_due 边界差异 / parse_front 类型强转 / write_front 语义 /
+  pick_words 算法）逐条记录于 vocab-app ADR-0012。
+  → 消费方达 2 个，`maturity: implemented → adopted`（ADR-0009 同期立档）。
+- ⛔ **AI-Kongzi 映射分析结论＝暂不强行接入**（`0e1c16b`，仅指针升级
+  v0.1.0→v0.5.0 保鲜，零运行时影响）：
+  | 内核能力 | AI-Kongzi 对应物 | 判定 |
+  |---|---|---|
+  | `grader` 四原语 | 无代码判分 —— CLI 人工 `--correct/--wrong` 置 `passed` | ❌ 无委托对象 |
+  | `scheduler` 阶梯状态机 | topic 级掌握度 + 固定 7 天复测（`judge_mastery`） | ❌ 模型不同，委托即改行为 |
+  | `vault.parse_front/write_front` | `_parse_frontmatter` 返回 `(fields, body)` 元组；`_build_frontmatter` 全量重建 | ❌ 契约不同 |
+  | `vault.as_date` | 2 处 inline `fromisoformat`（`recommend` 因子 1/5） | ⚠️ 可委托但零去重价值（无重复解析器） |
+  纪律依据：A3 先例（`pick_words` 留本地）+「不为凑数而委托」—— 消费方按**事实**记。
+  **Sprint 2B 建议**：Core Engine 实装时若把 7 天复测升级为 SRS 阶梯，
+  `scheduler` 可直接用（LADDER 注入）；判题保持人判；frontmatter 统一形状再议。
+- ⬜ `tutor-prompt-library` 技能库 + CI golden-set
+- ⬜ FSRS 可选后端（同 `next_schedule` 接口替换）
+- ⬜ `standard-lib-search` 独立 skill 串进 VCP 步骤 1
 
 ---
 
