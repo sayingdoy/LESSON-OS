@@ -64,3 +64,16 @@ bb-prep `src/practice.py` 2026-10-10 的全部改动（`--recent-gap` 去重 + �
   技术债 **B7**：扩扫描范围，或立「版本只在 PLAYBOOK frontmatter 出现一次、
   其余文档只链接不写值」的 SSOT 规则。**改内核后要人工复扫这三份文档。**
 - **历史快照文档（`HANDOFF.md`）不篡改历史** —— 加**时效声明**指向最新状态即可。
+
+## 备份与远端（2026-10-13 起：**双远端闭环**）
+- **五仓**（LESSON-OS / LIBGOV / SixSigmaBlackBelt / vocab-app / Project AI Kongzi）
+  统一 **双远端**：`origin` = `ecs:/srv/git/<name>.git`（自建裸库，异地主）；
+  `github` = `github.com/sayingdoy/<name>`（**私有**，异地次副本）。
+- 一键同步：`bash D:\Projects\LESSON-OS\scripts\sync_all.sh`（`--dry` 只看不推）。
+  对每个远端**幂等推送**；未配置的远端自动跳过。
+- 🔴 **陷阱**：`git push ... | head` 的退出码取自 `head`（**恒 0**）→ 失败被静默吞掉。
+  判 push 成败**必须**用命令替换（`out="$(git push ... 2>&1)"`）捕获真实退出码。
+- 🔴 **LIBGOV 的 `github` 曾经「仅配置、未推」是刻意的** —— 该层文档含内部项目名
+  与本地路径，须 **Owner 确认可见性**后才可建仓。2026-10-13 已确认并建私有仓。
+  **此类「未推」不要当成故障擅自补推。**
+- ADR-0003 原登记的「ECS 单点」残余风险 → **已消除**。
