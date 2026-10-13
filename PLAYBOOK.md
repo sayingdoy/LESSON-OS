@@ -163,8 +163,9 @@ load_key(note) / load_judged(note) / save_judged(note, nos)
 
 ## 7. 错题复盘约定（共用闭环）
 
-录入 → 分析（归纳同类错误共性）→ 出题验证（AI 出同类题，答对才算"已复习"）→ 已复习。
-AI-Kongzi `modules/错题整理系统/` 已建此闭环，可作参考实现；bb-prep `04-复盘/` 同构。
+> **SSOT 已迁至 [`tutor/教学契约.md`](tutor/教学契约.md)**（2026-10-13，库 0.1.0）——
+> 本节仅留指针，内容不在此复刻（防双 SSOT）。该文档同时立下提示库的
+> **入库判据**（≥2 项目确证重复才抽取）与「**引用或拷贝、不做常驻技能**」的使用规则。
 
 ---
 
@@ -172,7 +173,12 @@ AI-Kongzi `modules/错题整理系统/` 已建此闭环，可作参考实现；b
 
 - **P0（进行中）**：本手册 + 三项目源码盘点（证据见 §0）。低风险、零代码改动。
 - **P1（抽代码）**：从 bb-prep `src/` 重构成 `learn_engine` 包（原地重构，bb-prep 经 `import` 继续跑、行为不变）；FSRS 留接口不入核。
-- **P2（复用 + 技能化）**：vocab-app / AI-Kongzi 接入 `learn_engine`；FSRS 可选后端（同 `next_schedule` 接口替换）；建 `tutor-prompt-library` 技能库（CI golden-set 测试）。
+- **P2（复用 + 技能化）**：vocab-app ✅ 已接入 `learn_engine`（2026-10-13，maturity→adopted）；
+  AI-Kongzi 映射分析后暂不接入（零等价委托面，指针已保鲜，待 Sprint 2B）；
+  FSRS 可选后端（同 `next_schedule` 接口替换）；
+  `tutor-prompt-library` 种子已立（`tutor/教学契约.md` 0.1.0，PLAYBOOK §7 迁入）；
+  ~~CI golden-set 测试~~ —— golden-set 仅适用内核**代码**，提示库非代码，
+  质量靠入库判据 + 人工核对（tutor/教学契约.md §1）。
 
 ---
 

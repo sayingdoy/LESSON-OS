@@ -21,7 +21,8 @@ LESSON-OS 是 bb-prep / vocab-app / AI-Kongzi **共享的学习内核**：把
 接入），**达到入库门槛①（≥2 项目）**。
 P1-A（排期）/ P1-B（判分）**已完成**，三处占位**全部实装**：
 `vault.write_front`（0.4.0）/ `grader` adapter（0.5.0）/ `picker` adapter（0.3.0）。
-P2 已启动：vocab-app 接入（判分/排期/日期解析四处委托，0 差异验收）。
+P2 已启动：vocab-app 接入（判分/排期/日期解析四处委托，0 差异验收）；
+`tutor/教学契约.md` 种子已立（提示库本体，PLAYBOOK §7 迁入）。
 版本变更史见 `CHANGELOG.md`。
 
 ---
@@ -52,6 +53,7 @@ learn_engine/          ← 内核（零外部依赖 Python 包）
   picker.py            ← Picker 接口 + WeightedPicker ✅（0.3.0 贪心 + 温和上限）
   tests/               ← golden-set（纯 stdlib unittest，**47 项**）—— P1 建立
 PLAYBOOK.md            ← 领域 SSOT（schema / API 契约 / 触发协议 / 差异清单）
+tutor/                 ← 提示/审美库（教学契约 SSOT；**引用或拷贝，不做常驻技能**）
 CHANGELOG.md           ← 内核版本变更记录（谁在何时、为何 bump）
 ADR/                   ← 架构决策记录（索引见 `ADR/README.md`）
 Project Audit/         ← R1 方案与审计归档

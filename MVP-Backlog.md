@@ -153,7 +153,14 @@
   纪律依据：A3 先例（`pick_words` 留本地）+「不为凑数而委托」—— 消费方按**事实**记。
   **Sprint 2B 建议**：Core Engine 实装时若把 7 天复测升级为 SRS 阶梯，
   `scheduler` 可直接用（LADDER 注入）；判题保持人判；frontmatter 统一形状再议。
-- ⬜ `tutor-prompt-library` 技能库 + CI golden-set
+- 🔄 **`tutor-prompt-library` 种子已立**（2026-10-13，用户选标准档执行）：
+  `tutor/教学契约.md` 0.1.0（PLAYBOOK §7 复盘约定迁入 + 入库判据
+  「≥2 项目确证重复才抽取」+「引用或拷贝、不做常驻技能」约束）。
+  盘点结论：现存教学资产**全领域专属**（vocab-app ljg-word 51 行 /
+  AI-Kongzi ai.py inline ~113 行 / bb-prep 两模板 143 行），**无确证重复可抽**。
+  下一候选：**复盘格式骨架比对**（bb-prep `04-复盘/周期报告` vs AI-Kongzi
+  ReviewSession vs vocab-app 成绩单——同构未确证，比对后才判入库）。
+  CI golden-set 对提示库**不适用**（非代码）——质量靠入库判据 + 人工核对。
 - ⬜ FSRS 可选后端（同 `next_schedule` 接口替换）
 - ⬜ `standard-lib-search` 独立 skill 串进 VCP 步骤 1
 
