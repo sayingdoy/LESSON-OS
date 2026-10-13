@@ -8,6 +8,11 @@
 - **规范说明**：handoff 技能默认存系统临时目录；按用户显式要求，此处将 handoff 与该分支产物
   同置于可复用工作区，便于任何 agent 直接接受并开发。
 
+> ⚠️ **时效声明**：本文件是 **2026-10-10** 的历史快照，**其「状态」与「下一步」已被后续进展覆盖**。
+> 最新状态请读 `CHANGELOG.md`（版本史）+ `MVP-Backlog.md`（工单状态）。
+> 一句话：**P1（含 P1-C）已于 2026-10-13 全部完成**，内核 `0.5.0`，
+> bb-prep 已成**首个真实消费方**（`implemented`）。下方「下一步」的 P1 项**已不适用**。
+
 ---
 
 ## 一、本对话做了什么（按时间）
@@ -56,7 +61,7 @@
 | bb-prep | `D:\SixSigmaBlackBelt\` | 14/108 课，引擎已去重扩量；`src/` 含可抽内核 |
 | vocab-app | `D:\Projects\vocab-app\` | 已跑，引擎近同源，LADDER 不同（注入参数） |
 | AI-KONGZHI | `D:\Projects\Project AI Kongzi\` | 绿地，Core Engine 待实现 |
-| **LESSON-OS（本工作区）** | `D:\projects\LESSON-OS\` | P0 完成；`learn_engine` 骨架就位（占位待实装） |
+| **LESSON-OS（本工作区）** | `D:\projects\LESSON-OS\` | ~~P0 完成；`learn_engine` 骨架就位（占位待实装）~~ → **2026-10-13 更新：内核 `0.5.0`，P1 全部完成，bb-prep 已接入（`implemented`）** |
 
 ---
 

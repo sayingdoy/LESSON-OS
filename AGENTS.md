@@ -3,7 +3,7 @@
 > 给在这个仓库里干活的 agent。**这一屏是全部必须立刻知道的东西**；
 > 判据全文在 `PLAYBOOK.md`（领域 SSOT），本文件**只放指针，不复刻**。
 >
-> 建立 2026-10-10 | Owner: Jason | 版本 0.1.0
+> 建立 2026-10-10 | Owner: Jason | 版本 0.5.0
 
 ---
 
@@ -16,8 +16,12 @@ LESSON-OS 是 bb-prep / vocab-app / AI-Kongzi **共享的学习内核**：把
 **不做**：不做具体 App（题面 / 答案形态 / 领域权重留在各项目）；
 不做框架、服务、UI；**不引入 FSRS**（留可插拔接口，P2 候选）。
 
-**当前状态**：`planned` —— 骨架已立，**尚无真实消费方**。P1 未启动：
-`vault.write_front` / `grader` adapter / `picker` adapter 三处仍是 `NotImplementedError`。
+**当前状态**：`implemented`（2026-10-13 起）—— 骨架完整、测试通过，
+**已有 1 个真实消费方**（bb-prep 经 `vendor/LESSON-OS` submodule 接入），
+未达入库门槛①的 **≥2 项目**。
+P1-A（排期）/ P1-B（判分）**已完成**，三处占位**全部实装**：
+`vault.write_front`（0.4.0）/ `grader` adapter（0.5.0）/ `picker` adapter（0.3.0）。
+版本变更史见 `CHANGELOG.md`。
 
 ---
 
@@ -42,12 +46,13 @@ learn_engine/          ← 内核（零外部依赖 Python 包）
   __init__.py          ← __version__ 在此
   model.py             ← Item + DEFAULT_LADDER + MASTER_STAGE
   scheduler.py         ← is_due / next_schedule / apply_result（纯函数状态机）
-  vault.py             ← parse_front / as_date ✅ ；write_front ⚠️ 待实装
-  grader.py            ← Grader 接口 + ExactMatchGrader；bb-prep adapter 待补
-  picker.py            ← Picker 接口 + WeightedPicker；基类占位
-  tests/               ← golden-set（纯 stdlib unittest）—— P1 建立
+  vault.py             ← parse_front / as_date ✅ ；write_front ✅ 已实装（0.4.0）
+  grader.py            ← Grader 接口 + 4 个判分原语 ✅（0.5.0，策略全注入）
+  picker.py            ← Picker 接口 + WeightedPicker ✅（0.3.0 贪心 + 温和上限）
+  tests/               ← golden-set（纯 stdlib unittest，**47 项**）—— P1 建立
 PLAYBOOK.md            ← 领域 SSOT（schema / API 契约 / 触发协议 / 差异清单）
-ADR/                   ← 架构决策记录
+CHANGELOG.md           ← 内核版本变更记录（谁在何时、为何 bump）
+ADR/                   ← 架构决策记录（索引见 `ADR/README.md`）
 Project Audit/         ← R1 方案与审计归档
 .workbuddy/memory/     ← 工作日志（append-only）
 ```
@@ -68,7 +73,8 @@ Project Audit/         ← R1 方案与审计归档
 
 ## 5. 版本与发布
 
-- 版本载体：`learn_engine/__init__.py` 的 `__version__`（当前 `0.1.0`）
+- 版本载体：`learn_engine/__init__.py` 的 `__version__`（当前 `0.5.0`）
+- 变更记录：`CHANGELOG.md`（**bump 版本必须同步补一条**，否则生成器 / 消费方对不上）
 - 语义：PATCH=改 bug 签名不变；MINOR=加带默认值参数 / 新导出符号；
   **MAJOR=改签名 / 改默认行为 / 改 frontmatter 语义 / 改阈值**
 - 消费方钉版本：`git submodule` 指向本仓库（**commit 即版本锚点**）

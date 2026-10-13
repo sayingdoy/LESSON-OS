@@ -13,14 +13,20 @@
 | P0 手册 + SSOT schema + 路线图 + 骨架 | ✅ 完成 |
 | **R1 契约修正（裁决 B1–B5 / A3余 / C1余）** | ✅ **完成 2026-10-11**（内核 → `0.2.0`） |
 | **P1 抽代码（本 backlog）** | ✅ **完成 2026-10-13**：A1 ✅ / A2 ✅ / A3 ✅ / A4 ✅ / B1 ✅ / B2 ✅ / B3 ✅ |
-| **P1-C 收尾（版本锚点）** | 🟡 C1 ✅ / C2 ✅ / C3 ⬜ |
+| **P1-C 收尾（版本锚点）** | ✅ **完成 2026-10-13**：C1 ✅ / C2 ✅ / C3 ✅ |
 | P2 接入 + 技能库 | ⬜ 待启动 |
 | FSRS 后端 | ⬜ P2 候选 |
 
 **技术债清单**（P1 要还的）：
+- 🆕 **B7 —— 版本引用无机械检查（C3 时发现）**：`build_registry.py` 只扫
+  `PLAYBOOK.md`（`DOC_CANDIDATES` 优先级之首），于是 `AGENTS.md` / `README.md` 里的
+  版本与状态**可以静默陈旧**。本轮实测：`AGENTS.md` 停在 `0.1.0` + `planned`
+  （落后 4 个版本 + 1 档 maturity），是 agent 的执行宪法，误判代价最高。
+  **收敛方向**：把版本引用扫描扩到 `DOC_CANDIDATES` 全量（同一漂移检测只报不改），
+  或立「版本只在 PLAYBOOK frontmatter 出现一次、其余文档只链接不写值」的 SSOT 规则。
 - `picker` / `scheduler` / `vault` 内部**四份同源日期解析**（B6，P1 收敛到一处）
 - ✅ **已清**：`grader.Grader.judge` 基类占位 / bb-prep adapter 缺失 → **实装**
-  （2026-10-13，**P1-B1**，内核 `0.5.0`；4 个判分原语 + 策略全注入；断言 25 → **46** 项）
+  （2026-10-13，**P1-B1**，内核 `0.5.0`；4 个判分原语 + 策略全注入；断言 25 → **47** 项）
 - ✅ **已清**：`vault.write_front` 占位 → **实装**（2026-10-13，**A2**，内核 `0.4.0`；断言 16 → **25** 项）
 - ✅ **已清**：`tests/` + golden-set 已建（2026-10-11，13 项）
 - ✅ **已清**：`picker` 新题贪心 + 温和上限已移入（2026-10-13，A4，断言 16 项）
@@ -78,7 +84,7 @@
 
 | # | 工单 | 验收 |
 |---|---|---|
-| B1 | 实装 `grader` 的 bb-prep adapter（字母集 / 数值） | ✅ **完成 2026-10-13**（内核 → `0.5.0`；4 个判分原语，策略全注入；golden **46 项**全过） |
+| B1 | 实装 `grader` 的 bb-prep adapter（字母集 / 数值） | ✅ **完成 2026-10-13**（内核 → `0.5.0`；4 个判分原语，策略全注入；golden **47 项**全过） |
 | B2 | 补 `judge` 的回归测试（覆盖历史判分器 bug 场景） | ✅ **完成**：21 项新断言覆盖 2026-10-06 全部边界（小写/多选/带思路/XBARR 陷阱/漏选/放弃）+ **真实数据复现 10-05=60% / 10-06=70%** |
 | B3 | bb-prep `src/` 判分改为 `import learn_engine` | ✅ **完成**：`letters`/`judge_tf`/`judge` 三符号委托内核；**88 条真实作答 0 差异** |
 
@@ -104,8 +110,17 @@
 | # | 工单 | 验收 |
 |---|---|---|
 | C1 | 各仓库 `git init`（顺序：LESSON-OS → bb-prep → vocab-app → AI-Kongzi） | ✅ **完成 2026-10-10**，4 仓库就绪 |
-| C2 | 消费项目以 `git submodule` 钉 LESSON-OS commit | ✅ **完成**：bb-prep `vendor/LESSON-OS` @`620a334`，URL 指向远端 |
-| C3 | 补 `__version__` bump 记录 + ADR 归档 | ⬜ 待做 |
+| C2 | 消费项目以 `git submodule` 钉 LESSON-OS commit | ✅ **完成**：bb-prep `vendor/LESSON-OS` @`948b419`（＝内核 `0.5.0`），URL 指向远端 |
+| C3 | 补 `__version__` bump 记录 + ADR 归档 | ✅ **完成 2026-10-13**：① 新建 `CHANGELOG.md`（0.1.0→0.5.0 逐版本，含 BREAKING 标记 + 「版本 × 消费方对照」表）；② 新建 `ADR/README.md` 索引（6 条实体 + 空洞号 0005/0007 显式登记 + 跨项目编号空间说明）；③ 修 3 份陈旧文档（见下） |
+
+> **C3 附带修复 —— 陈旧文档**（三份都指向过时状态，agent 读了会误判）：
+> - `AGENTS.md`（**执行宪法，最严重**）：版本 `0.1.0`→`0.5.0`；状态 `planned`／「尚无真实消费方」
+>   → `implemented`；目录地图「`write_front` 待实装 / adapter 待补 / 基类占位」→ 全部实装
+> - `README.md`：P1「待启动」→ 完成；状态板「骨架（占位待实现）」→ 内核 0.5.0
+> - `PLAYBOOK.md`：§11.1 消费面 `0.4.0` 双委托 → `0.5.0` 三委托（补判分）；
+>   §11.5 补「bump 三处同步」与版本漂移实录
+> - 根因：**生成器只扫 `PLAYBOOK.md`**（`DOC_CANDIDATES` 优先级），其余文档的版本引用
+>   无机械检查 → 漂移不可见。已记入技术债（**B7**）。
 
 > **备份已闭环**：4 仓库全部推送至 `ecs:/srv/git/`（自建裸库，异地）。
 > 日常同步 `bash scripts/sync_all.sh`。详见 ADR-0003「备份闭环」。
@@ -115,7 +130,7 @@
 
 ## P2 展望（本 backlog 不含，仅登记）
 
-- vocab-app / AI-Kongzi 接入 `learn_engine`（届时 `maturity: planned → adopted`）
+- vocab-app / AI-Kongzi 接入 `learn_engine`（届时 `maturity: implemented → adopted`）
 - `tutor-prompt-library` 技能库 + CI golden-set
 - FSRS 可选后端（同 `next_schedule` 接口替换）
 - `standard-lib-search` 独立 skill 串进 VCP 步骤 1

@@ -81,16 +81,17 @@
 1. **读 `PLAYBOOK.md`** —— 系统宪法、SSOT schema、API 契约、ADR 模板、路线图（单一真源）。
 2. **读 `learn_engine/__init__.py`** —— 当前公开 API 与版本号，立即知道能 import 什么。
 3. **读 `Project Audit/`** —— 所有架构/方案决策与审计报告（含本分支的「工作路径图 + 计划」审计）。
-4. **P1 任务** = 把 `learn_engine/` 的 `NotImplementedError` 占位落成真实实现，并让 bb-prep
-   经 `import learn_engine` 继续跑、行为零中断（见 `Project Audit/` 方案文件）。
-5. **改内核必走**：bump `__version__` → 写 `Project Audit/` 方案+审计 → 归档 → 再编码（audit-os 硬闸门）。
+4. **P1 已收尾**（A 排期 / B 判分 / C 版本锚点）—— `learn_engine/` 三处占位已全部实装，
+   bb-prep 经 `import learn_engine` **真实消费**（submodule 钉版本），行为零中断。
+5. **改内核必走**：bump `__version__` → 补 `CHANGELOG.md` 一条 → 写 `Project Audit/` 方案+审计 →
+   归档 → 再编码（audit-os 硬闸门）。
 
 **状态板**
 | 项 | 状态 |
 |---|---|
 | P0 手册 + SSOT schema + 路线图 | ✅ 完成 |
-| `learn_engine` 骨架（API 契约 + 共享逻辑 + adapter 接口） | ✅ 完成（占位待实现） |
-| P1 抽代码：bb-prep `src/` → `learn_engine` 实装 | ⬜ 待启动 |
+| `learn_engine` 内核（API 契约 + 共享逻辑 + 4 判分原语） | ✅ 完成（**0.5.0**） |
+| P1 抽代码：bb-prep `src/` → `learn_engine` 实装 | ✅ **完成 2026-10-13**（A2/A3/A4/B1/B3） |
 | P2 vocab-app / AI-KONGZHI 接入 + tutor 技能库 | ⬜ 待启动 |
 | FSRS 后端 | ⬜ P2 候选 |
 

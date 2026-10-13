@@ -283,8 +283,9 @@ AI-Kongzi `modules/错题整理系统/` 已建此闭环，可作参考实现；b
 > **门槛本身就是信噪比过滤器** —— 注册表一旦退化成"所有项目清单"，检索结果全是噪音。
 > **门槛①按事实记，不按计划记。**
 > **变更记录**：LESSON-OS 原记 `planned`（"尚无真实消费方"）。**2026-10-13 起改记
-> `implemented`** —— bb-prep 已通过 `vendor/LESSON-OS` submodule 钉 `0.4.0` 真实消费
-> （`practice.pick_items` + `bbcore.apply_result` 双委托，出卷逐字节验收通过），
+> `implemented`** —— bb-prep 已通过 `vendor/LESSON-OS` submodule 钉 `0.5.0` 真实消费
+> （`practice.pick_items` + `bbcore.apply_result` + **`judge` 判分** 三处委托，
+> 出卷逐字节验收 + 88 条作答 0 差异），
 > 消费方 **1 个（< 2）**，正落在 `implemented` 档。待 vocab-app / AI-Kongzi 接入后
 > 才够 `adopted`（≥2 项目）。
 
@@ -326,6 +327,13 @@ version: 0.1.0
 | PATCH | 只改 bug，签名不变 | agent 自主 |
 | MINOR | 新增带默认值参数 / 新增导出符号 | agent 自主 |
 | MAJOR | 改签名 / 改默认行为 / 改 frontmatter 语义 / **改阈值** | **必须人工确认**（会动消费方） |
+
+> **bump 三处同步**（缺一即版本漂移）：
+> ① `learn_engine/__init__.py` 的 `__version__`（**唯一真源**）；
+> ② `PLAYBOOK.md` frontmatter `version`（注册表 `build_registry.py` 读它）；
+> ③ `CHANGELOG.md` 补一条（谁在何时、为何 bump）。
+> 生成器带**版本漂移检测**（frontmatter ≠ `__version__` 时**只报不改**）——
+> 2026-10-13 实际踩过：内核已 0.3.0，PLAYBOOK 仍写 0.2.0，注册表**静默记旧值**。
 
 ### 11.6 不在本注册表范围
 
